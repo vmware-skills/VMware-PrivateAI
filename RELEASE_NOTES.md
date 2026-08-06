@@ -1,10 +1,10 @@
 # Release Notes — vmware-privateai
 
-## v1.0.0 (beta) — 2026-08-06
+## v0.1.0 (beta) — 2026-08-06
 
 First release. Skill #15 of the VMware skill family; the **GPU / AI-infrastructure lens** for VMware
 Private AI Foundation with NVIDIA (PAIF-N) on vSphere 9.x / VCF 9.1. Independent 1.x version line (a new
-skill starts at its own 1.0.0, not the family 1.8.x).
+skill starts at its own 0.1.0, not the family 1.8.x).
 
 ### MCP tools — 10 (9 read, 1 write)
 

@@ -10,7 +10,7 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 > 赞助关系。** "VMware"、"vSphere"、"VCF" 为 Broadcom 商标;"NVIDIA"、"vGPU" 为 NVIDIA 商标。源码遵循
 > MIT 许可,公开可审计:[github.com/vmware-skills/VMware-PrivateAI](https://github.com/vmware-skills/VMware-PrivateAI)。
 
-> **状态:v1.0.0(beta)。** 家族第 15 个 skill,走独立 1.x 版本线。每条 API 路径在使用前都对照官方
+> **状态:v0.1.0(beta)。** 家族第 15 个 skill,走独立 1.x 版本线。每条 API 路径在使用前都对照官方
 > Broadcom/NVIDIA 资料核实(见 `tests/eval/spec/privateai_endpoints.py`)——不凭记忆编写端点。GET 响应
 > **字段名** 与 PAIS 的确切路径为防御式,待真机 9.x 硬件验证(见下方 beta 活口)。由家族 harness 治理
 > (审计 + 策略 + 教学性错误);读写授权交由 vCenter 服务账号的 RBAC 角色。
