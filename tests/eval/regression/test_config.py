@@ -104,3 +104,11 @@ def test_pais_missing_config_file_error_avoids_phantom_commands(tmp_path):
     for phantom in _PHANTOM_STRINGS:
         assert phantom not in msg
     assert "pais:" in msg  # points at the real manual step
+
+
+def test_get_target_unknown_raises_config_error():
+    # ConfigError (not KeyError) so the teaching message passes MCP _safe_error (review LOW).
+    app = cfg.AppConfig(targets=(cfg.TargetConfig(name="a", host="h", config_username="u"),))
+    with pytest.raises(ConfigError) as ei:
+        app.get_target("nope")
+    assert "not found" in str(ei.value) and "a" in str(ei.value)

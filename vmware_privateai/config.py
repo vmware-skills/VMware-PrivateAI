@@ -176,7 +176,9 @@ class AppConfig:
             if t.name == name:
                 return t
         available = ", ".join(t.name for t in self.targets)
-        raise KeyError(
+        # ConfigError (not KeyError) so the teaching message passes _safe_error's allow-list
+        # instead of being masked to a generic error (review LOW).
+        raise ConfigError(
             f"Target '{name}' not found. Available: {available}. "
             f"Pass --target with one of those names, or add the target to {CONFIG_FILE} and re-run."
         )
@@ -185,7 +187,7 @@ class AppConfig:
         """Return the environment declared by ``name``, or by the default target."""
         try:
             target = self.get_target(name) if name else self.default_target
-        except (KeyError, ValueError):
+        except (ConfigError, KeyError, ValueError):
             return ""
         return target.environment
 

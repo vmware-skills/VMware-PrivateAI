@@ -17,6 +17,8 @@ from vmware_privateai.ops._errors import PaisError
 from vmware_privateai.pais.config import TOKEN_ENV_VAR, PaisConfig, load_pais_config
 
 _TIMEOUT = 30.0
+# Transient gateway statuses that earn one light retry (family error-recovery layer 1).
+_TRANSIENT = frozenset({502, 503, 504})
 
 
 class PaisClient:
@@ -52,14 +54,23 @@ class PaisClient:
         # Reading the token here (a property) picks up a rotated token on every call and
         # keeps the (missing-token -> ConfigError) teaching message on the same code path.
         headers = {"Authorization": f"Bearer {self._config.token}", "Accept": "application/json"}
-        try:
-            resp = self._client.request(method, path, headers=headers)
-        except httpx.TransportError as exc:
-            raise PaisError(
-                f"Could not reach the PAIS endpoint '{self._config.endpoint}' — check the "
-                f"'pais.endpoint' in config.yaml is reachable from this machine and that its "
-                f"TLS certificate is trusted (set pais.verify_ssl: false only for a self-signed lab)."
-            ) from exc
+        # One light retry on a transient transport / gateway error (502/503/504); 4xx and a
+        # successful response are returned/raised immediately (review LOW — family layer 1).
+        resp = None
+        for attempt in range(2):
+            try:
+                resp = self._client.request(method, path, headers=headers)
+            except httpx.TransportError as exc:
+                if attempt == 0:
+                    continue
+                raise PaisError(
+                    f"Could not reach the PAIS endpoint '{self._config.endpoint}' — check the "
+                    f"'pais.endpoint' in config.yaml is reachable from this machine and that its "
+                    f"TLS certificate is trusted (set pais.verify_ssl: false only for a self-signed lab)."
+                ) from exc
+            if resp.status_code in _TRANSIENT and attempt == 0:
+                continue
+            break
 
         code = resp.status_code
         if code in (401, 403):

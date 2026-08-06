@@ -122,6 +122,35 @@ def test_non_json_raises_teaching_error(monkeypatch):
             pais.list_models(client)
 
 
+# --- transient-error retry (review LOW — family error-recovery layer 1) --------
+
+def test_transient_503_is_retried_once_then_succeeds(monkeypatch):
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return httpx.Response(503, text="gateway busy")
+        return httpx.Response(200, json={"object": "list", "data": [{"id": "m1"}]})
+
+    with _client(monkeypatch, handler) as client:
+        out = pais.list_models(client)
+    assert calls["n"] == 2 and out["total"] == 1  # one retry, second attempt succeeded
+
+
+def test_persistent_503_surfaces_after_one_retry(monkeypatch):
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        return httpx.Response(503, text="down")
+
+    with _client(monkeypatch, lambda r: handler(r)) as client:
+        with pytest.raises(PaisError):
+            pais.list_models(client)
+    assert calls["n"] == 2  # tried twice (one retry) then surfaced — no infinite loop
+
+
 # --- missing token --------------------------------------------------------------
 
 def test_missing_token_raises_config_error(monkeypatch):

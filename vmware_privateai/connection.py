@@ -18,21 +18,6 @@ if TYPE_CHECKING:
 
 from vmware_privateai.config import CONFIG_FILE, AppConfig, ConfigError, TargetConfig, load_config
 
-# ServiceInstance is a pyVmomi ManagedObject — its __setattr__ rejects any
-# attribute not in its allowed list (raises "Managed object attributes are
-# read-only" on pyVmomi 8.x+). Per-connection metadata is kept in this module
-# dict, keyed by id(si), and cleared via atexit when the SI is disconnected.
-# 踩坑 #32 (2026-05-19, 客户 vCenter 8.0U3 现场).
-_SI_VERIFY_SSL: dict[int, bool] = {}
-
-
-def get_verify_ssl(si: ServiceInstance) -> bool:
-    """Return verify_ssl flag stashed by the connect() that created ``si``.
-
-    Defaults to True (strict) if the SI was created outside this manager.
-    """
-    return _SI_VERIFY_SSL.get(id(si), True)
-
 
 class ConnectionManager:
     """Manages connections to multiple vCenter/ESXi targets."""
@@ -66,10 +51,6 @@ class ConnectionManager:
                 alive = False
             if alive:
                 return si
-            # Evict the id(si)-keyed side store NOW rather than waiting for
-            # atexit: once the old si is GC'd, a new si for a DIFFERENT target
-            # can reuse the same id() value and read stale verify_ssl. 踩坑 #40.
-            _SI_VERIFY_SSL.pop(id(si), None)
             del self._connections[target.name]
 
         si = self._create_connection(target)
@@ -92,22 +73,6 @@ class ConnectionManager:
     def list_targets(self) -> list[str]:
         """List all configured target names."""
         return [t.name for t in self._config.targets]
-
-    def connect_all(self) -> tuple[list[tuple[str, ServiceInstance]], list[tuple[str, str]]]:
-        """Connect to every configured target, tolerating per-target failures.
-
-        Returns ``(sessions, unreachable)`` so a cross-vCenter GPU roll-up
-        degrades gracefully (one dead vCenter never sinks the whole view). The
-        failure reason is class-name only — no host:port or credential leaks.
-        """
-        sessions: list[tuple[str, ServiceInstance]] = []
-        unreachable: list[tuple[str, str]] = []
-        for name in self.list_targets():
-            try:
-                sessions.append((name, self.connect(name)))
-            except Exception as e:  # noqa: BLE001 — any connect failure degrades to "unreachable"
-                unreachable.append((name, type(e).__name__))
-        return sessions, unreachable
 
     def list_connected(self) -> list[str]:
         """List currently connected target names."""
@@ -158,12 +123,7 @@ class ConnectionManager:
                 f"{CONFIG_FILE} are reachable from this machine."
             ) from exc
 
-        # Stash verify_ssl in module dict (NOT on si — 踩坑 #32). Consumers in
-        # ops/* read via get_verify_ssl(si).
-        _SI_VERIFY_SSL[id(si)] = target.verify_ssl
-
         def _cleanup(_si: ServiceInstance = si) -> None:
-            _SI_VERIFY_SSL.pop(id(_si), None)
             try:
                 Disconnect(_si)
             except Exception:

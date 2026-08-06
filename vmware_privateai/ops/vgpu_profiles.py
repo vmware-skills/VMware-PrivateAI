@@ -93,7 +93,7 @@ def list_vgpu_profiles(
             continue
         # QueryConfigTarget (and host.parent.environmentBrowser) is a per-host RPC: a single
         # disconnected / not-responding host must NOT sink the whole catalog. Collect it into
-        # unreachable_hosts and keep aggregating the rest (degrade like connect_all, review M2).
+        # unreachable_hosts and keep aggregating the rest (degrade gracefully per-host, review M2).
         try:
             infos = _vgpu_infos(_query_config_target(r.get("_obj")))
         except Exception:  # noqa: BLE001 — any per-host RPC fault degrades to "unreachable", not a crash
