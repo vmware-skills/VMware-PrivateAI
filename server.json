@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.vmware-skills/vmware-privateai",
   "title": "VMware Private AI (GPU & Model Serving)",
-  "description": "VMware Private AI Foundation with NVIDIA ops: GPU inventory, vGPU/DirectPath profiles, utilization, vGPU assignment, PAIS model serving — 10 MCP tools.",
+  "description": "VMware Private AI (NVIDIA): GPU inventory, vGPU profiles, utilization, model serving \u2014 10 tools",
   "repository": {
     "url": "https://github.com/vmware-skills/VMware-PrivateAI",
     "source": "github"
