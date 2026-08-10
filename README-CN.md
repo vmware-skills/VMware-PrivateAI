@@ -15,18 +15,24 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 > **字段名** 与 PAIS 的确切路径为防御式,待真机 9.x 硬件验证(见下方 beta 活口)。由家族 harness 治理
 > (审计 + 策略 + 教学性错误);读写授权交由 vCenter 服务账号的 RBAC 角色。
 
-## 能力(10 工具:9 读 / 1 写)
+## 能力(17 工具:16 读 / 1 写)
 
 | 类别 | 工具 | 读/写 |
 |------|------|:----:|
 | **GPU 清点** | 主机 列表/详情、设备列表、vGPU 消费者列表 | 4 读 |
 | **GPU 利用率** | 每台 vGPU 虚机实时利用率(GPU %、显存 %、温度) | 1 读 |
+| **GPU 就绪** | 每台主机 vGPU/PAIS 就绪判定 + 阻塞原因 | 1 读 |
 | **配置目录** | vGPU 配置列表、DirectPath 配置列表 | 2 读 |
+| **配置校验** | 改 vGPU 配置前只读预检(电源态 + 主机是否提供) | 1 读 |
 | **vGPU 分配** | 设置虚机 vGPU 配置(虚机须已关机) | 1 写 |
-| **Private AI Service** | 已服务模型列表、知识库列表 | 2 读 |
+| **Private AI Service** | 已服务模型、模型目录、知识库、数据源 列表 | 4 读 |
+| **PAIS 监控** | 集群 GPU 汇总(利用率/显存/温度、热点/空闲、最忙) | 1 读 |
+| **选型与 air-gap** | LLM GPU/存储选型顾问、本地 pais.yml 镜像清单 | 2 读 |
 
 读操作严格无破坏性。唯一的写(`vgpu_assign`)会预览爆炸半径、拒绝已开机虚机、**绝不自行关机**、
-CLI 双重确认、统一审计到 `~/.vmware/audit.db`。
+CLI 双重确认、统一审计到 `~/.vmware/audit.db`;可先用 `vgpu_profile_validate` 预检。
+`pais_model_catalog` / `pais_data_source_list` 走未确认的 PAIS 控制面路径(踩坑 #36:404 返回 base-URL
+教学提示,不当 bug);`pais_sizing_advise` / `pais_bundle_verify` 无需连接(纯计算 / 本地文件解析)。
 
 ## 快速开始
 

@@ -59,6 +59,14 @@ applies via ReconfigVM and audits the result. The VM must be powered **off** —
 with a teaching error routing you to `vmware-aiops vm_power_off`. This command never powers the VM off
 itself.
 
+```bash
+vmware-privateai gpu readiness [--host H] [--target T] [--config PATH]
+```
+Per-host vGPU/PAIS readiness verdict. Columns: host, ready/not-ready, gpu_count, graphics mode,
+profiles offered, plus `blocking_reasons` for any host that is not ready. Only hosts that have a GPU
+are shown. The NVIDIA driver / MFT VIB version and MIG are **not** in the vSphere API — verify with
+`nvidia-smi` / `esxcli software vib list` on the host.
+
 ## `vgpu` — profile catalog
 
 ```bash
@@ -75,7 +83,14 @@ vmware-privateai vgpu directpath-list [--name N] [--vendor V] [--target T] [--co
 vCenter-level DirectPath (dynamic passthrough) profiles. **vSphere 9.0+** — on an older vCenter this
 prints a teaching error routing you to `vgpu profile-list`. Columns: name, id, vendor, description.
 
-## `pais` — Private AI Service (REST)
+```bash
+vmware-privateai vgpu validate <vm_name> <target_profile> [--target T] [--config PATH]
+```
+Read-only pre-flight for a vGPU profile change (the pre-flight for `gpu vgpu-assign`). Checks the two
+ReconfigVM failure modes up front — VM powered on, and whether the VM's own host offers the target
+profile — and prints `can apply` / `blocked` with the reasons. No reconfigure.
+
+## `pais` — Private AI Service (REST), monitoring, sizing, and air-gap
 
 These talk to the PAIS REST endpoint (`config.yaml` `pais:` section) with the bearer token in
 `VMWARE_PRIVATEAI_PAIS_TOKEN` — separate from the vCenter connection, so they take `--config` but not
@@ -91,6 +106,32 @@ substring-matches the model id.
 vmware-privateai pais kb-list [--name N] [--config PATH]
 ```
 List PAIS knowledge bases (RAG vector stores). Columns: name/id, status, description.
+
+```bash
+vmware-privateai pais model-catalog [--name N] [--config PATH]
+vmware-privateai pais data-source-list [--name N] [--config PATH]
+```
+`model-catalog` lists models available/approved to **deploy** (distinct from the served `/models`);
+`data-source-list` lists RAG ingest connectors. Both hit **INFERRED** PAIS control-plane paths — a 404
+prints a base-URL teaching message, not a bug.
+
+```bash
+vmware-privateai pais monitoring-summary [--hot-pct P] [--top N] [--target T] [--config PATH]
+```
+Fleet GPU rollup (vgpu_vms, reporting/hot/idle, gpu%/mem% avg+max, busiest). Uses the **vCenter**
+connection (takes `--target`), not PAIS REST. Deep per-SM/MIG telemetry needs NVIDIA DCGM (out of scope).
+
+```bash
+vmware-privateai pais sizing [--model llama-70b | --billions 70] [--precision fp16]
+```
+Estimate GPU memory / GPU count / storage to serve an LLM. **No connection** — a pure planning
+heuristic. Honest that random IOPS is the wrong axis for the model weights.
+
+```bash
+vmware-privateai pais bundle-verify <pais.yml>
+```
+Parse a **local** pais.yml and list container images + registries to mirror for an air-gap, flagging
+public registries and mutable tags. **No network** — does not contact any registry.
 
 ## Exit codes
 

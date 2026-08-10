@@ -31,6 +31,16 @@ PYVMOMI_OBJECTS: dict[str, dict[str, object]] = {
         "fields": ["graphicsInfo", "graphicsConfig", "sharedPassthruGpuTypes", "sharedGpuCapabilities"],
         "status": "VERIFIED",
     },
+    "gpu_host_graphics_config": {
+        # VERIFIED against pyVmomi: HostConfigInfo.graphicsConfig : vim.host.GraphicsConfig
+        # (hostDefaultGraphicsType e.g. "shared"/"sharedDirect", sharedPassthruAssignmentPolicy,
+        # deviceType[]). Read via the PropertyCollector path "config.graphicsConfig" — the readiness
+        # op uses it to tell vGPU mode (sharedDirect) apart from vSGA/passthrough.
+        "path": "HostSystem.config.graphicsConfig",
+        "type": "vim.host.GraphicsConfig",
+        "fields": ["hostDefaultGraphicsType", "sharedPassthruAssignmentPolicy", "deviceType"],
+        "status": "VERIFIED",
+    },
     "gpu_pci_passthru": {
         "path": "HostSystem.configManager.pciPassthruSystem",
         "type": "HostPciPassthruSystem",
@@ -81,6 +91,15 @@ PYVMOMI_OBJECTS: dict[str, dict[str, object]] = {
         "fields": ["poweredOn", "poweredOff", "suspended"],
         "status": "VERIFIED",
     },
+    "vm_runtime_host": {
+        # VERIFIED (vim.VirtualMachine.runtime.host -> HostSystem MO). The vGPU-change validator
+        # reads it to check the VM's OWN host offers the target profile (that is the host ReconfigVM
+        # will place against), then calls that host's QueryConfigTarget.
+        "path": "VirtualMachine.runtime.host",
+        "type": "vim.HostSystem",
+        "fields": ["name", "parent.environmentBrowser"],
+        "status": "VERIFIED",
+    },
     "vm_vgpu_assign": {
         "path": "VirtualMachine.ReconfigVM_Task(deviceChange add VirtualPCIPassthrough(VmiopBackingInfo(vgpu=...)))",
         "type": "write",
@@ -116,6 +135,11 @@ GPU_PERF_COUNTERS: dict[str, str] = {
 # (the client joins the operator-configured base_url in front).
 PAIS_ENDPOINTS: dict[str, dict[str, str]] = {
     "list_models": {"method": "GET", "path": "/api/v1/compatibility/openai/v1/models", "status": "INFERRED_EXACT"},
+    # Model CATALOG (deployable/approved models) — distinct from the served OpenAI /models above.
+    # The exact path is a best guess pending a live OpenAPI pull; the client's 404 handler turns a
+    # miss into a base-URL teaching message (踩坑 #36), so shipping it INFERRED is consistent with
+    # how the other PAIS reads are already shipped.
+    "list_model_catalog": {"method": "GET", "path": "/api/v1/control/models", "status": "INFERRED_EXACT"},
     "list_data_sources": {"method": "GET", "path": "/api/v1/control/data-sources", "status": "INFERRED_EXACT"},
     "list_knowledge_bases": {"method": "GET", "path": "/api/v1/control/knowledge-bases", "status": "INFERRED_EXACT"},
     "list_indexes": {
@@ -144,8 +168,10 @@ VERIFIED_PROPERTY_PATHS: frozenset[str] = frozenset(
     {
         "name",
         "config.graphicsInfo",  # gpu_host_graphics_info
+        "config.graphicsConfig",  # gpu_host_graphics_config (readiness: vGPU mode)
         "config.hardware.device",  # vm_vgpu_consumer
         "runtime.powerState",  # vm_power_state
+        "runtime.host",  # vm_runtime_host (vgpu change validator)
     }
 )
 

@@ -49,13 +49,17 @@ Web Services API (pyVmomi) plus the PAIS REST API.
 |----------|-------|:-----:|:----------:|
 | **GPU inventory** | host list/get, device list, vGPU consumer list | 4 | 4 R |
 | **GPU utilization** | real-time per-vGPU-VM utilization (gpu %, mem %, temp) | 1 | 1 R |
+| **GPU readiness** | per-host vGPU/PAIS readiness verdict + blocking reasons | 1 | 1 R |
 | **Profile catalog** | vGPU profile list, DirectPath profile list | 2 | 2 R |
+| **Profile validation** | pre-flight a vGPU profile change (power state + host offers it) | 1 | 1 R |
 | **vGPU assignment** | set a VM's vGPU profile (VM must be powered off) | 1 | 1 W |
-| **Private AI Service** | served-model list, knowledge-base list | 2 | 2 R |
+| **Private AI Service** | served-model list, model catalog, knowledge-base list, data-source list | 4 | 4 R |
+| **PAIS monitoring** | fleet GPU rollup (util/mem/temp, hot/idle, busiest) | 1 | 1 R |
+| **Sizing & air-gap** | LLM GPU/storage sizing advisor, local pais.yml image inspector | 2 | 2 R |
 
-**10 MCP tools (9 read / 1 write).** Reads are strictly non-destructive. The single write
+**17 MCP tools (16 read / 1 write).** Reads are strictly non-destructive. The single write
 (`vgpu_assign`) previews its blast radius, refuses a powered-on VM, never powers a VM off itself, is
-double-confirmed at the CLI, and is audit-logged.
+double-confirmed at the CLI, and is audit-logged. Pre-flight the write with `vgpu_profile_validate`.
 
 ## Quick Install
 
@@ -133,15 +137,25 @@ fresh token from your Identity Provider, re-export it, and retry.
 - **MCP** — agent-driven operations with structured JSON; run `vmware-privateai mcp` (an installed
   console script, so no `uvx` network re-resolve — works through enterprise TLS proxies, 踩坑 #25).
 
-## MCP Tools (10 — 9 read, 1 write)
+## MCP Tools (17 — 16 read, 1 write)
 
 | Category | Tools | R/W |
 |----------|-------|:---:|
 | GPU inventory | `gpu_host_list`, `gpu_host_get`, `gpu_device_list`, `gpu_consumer_list` | Read |
 | GPU utilization | `gpu_utilization` | Read |
+| GPU readiness | `gpu_host_readiness` | Read |
 | Profile catalog | `vgpu_profile_list`, `directpath_profile_list` | Read |
-| Private AI Service | `pais_model_list`, `pais_knowledge_base_list` | Read |
+| Profile validation | `vgpu_profile_validate` | Read |
+| Private AI Service | `pais_model_list`, `pais_model_catalog`, `pais_knowledge_base_list`, `pais_data_source_list` | Read |
+| PAIS monitoring | `pais_monitoring_summary` | Read |
+| Sizing & air-gap | `pais_sizing_advise`, `pais_bundle_verify` | Read |
 | vGPU assignment | `vgpu_assign` | Write |
+
+**INFERRED PAIS paths**: `pais_model_catalog` and `pais_data_source_list` hit PAIS control-plane
+paths that are unconfirmed against a live OpenAPI (踩坑 #36) — a 404 returns a base-URL teaching
+message, not a bug. `pais_sizing_advise` and `pais_bundle_verify` need **no connection** (pure
+computation / local file parse). `gpu_host_readiness` reports what the vSphere API exposes and says
+so where it cannot (NVIDIA driver / MFT VIB / MIG need nvidia-smi on the host).
 
 **List envelope**: every `*_list` tool returns `{items, returned, limit, offset, total, truncated, hint}`
 — read rows from `items` and check `truncated` before concluding a listing is complete; empty `items`
@@ -163,10 +177,17 @@ vmware-privateai gpu device-list [--host H] [--vendor V]     # physical GPUs (vm
 vmware-privateai gpu consumer-list [--profile P] [--vm V]    # VMs holding a vGPU + profile
 vmware-privateai gpu utilization [--vm V] [--top N]          # real-time GPU %, mem %, temp
 vmware-privateai gpu vgpu-assign <vm> <profile> [--dry-run]  # WRITE — VM must be off; double-confirm
+vmware-privateai gpu readiness [--host H]                   # per-host vGPU/PAIS readiness verdict
 vmware-privateai vgpu profile-list [--host H] [--model M]    # vGPU profile catalog
 vmware-privateai vgpu directpath-list [--vendor V]           # DirectPath profiles (vSphere 9.0+)
+vmware-privateai vgpu validate <vm> <profile>               # pre-flight a vGPU profile change (read-only)
 vmware-privateai pais model-list [--name N]                  # PAIS served models
+vmware-privateai pais model-catalog [--name N]               # PAIS deployable/approved model catalog
 vmware-privateai pais kb-list [--name N]                     # PAIS knowledge bases
+vmware-privateai pais data-source-list [--name N]            # PAIS RAG data sources
+vmware-privateai pais monitoring-summary [--top N]           # fleet GPU rollup (util/mem/temp, hot/idle)
+vmware-privateai pais sizing --model llama-70b               # LLM GPU/storage sizing (no connection)
+vmware-privateai pais bundle-verify <pais.yml>              # local air-gap image inspector (no network)
 ```
 Full list: `references/cli-reference.md`. Per-tool response-token estimates: `references/capabilities.md`.
 

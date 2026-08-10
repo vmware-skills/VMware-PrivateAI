@@ -14,9 +14,10 @@ from __future__ import annotations
 
 from vmware_privateai.mcp_server._shared import mcp
 from vmware_privateai.mcp_server.tools import (
-    gpu,  # noqa: F401  (registers GPU inventory tools)
-    pais,  # noqa: F401  (registers PAIS model/KB tools)
-    vgpu_profiles,  # noqa: F401  (registers profile-catalog tools)
+    advisor,  # noqa: F401  (registers sizing / bundle advisor tools — no connection)
+    gpu,  # noqa: F401  (registers GPU inventory + host-readiness tools)
+    pais,  # noqa: F401  (registers PAIS model/KB/catalog/data-source/monitoring tools)
+    vgpu_profiles,  # noqa: F401  (registers profile-catalog + profile-validate tools)
 )
 
 

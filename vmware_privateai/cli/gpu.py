@@ -155,3 +155,29 @@ def gpu_consumer_list_cmd(
         console.print(f"  [cyan]{c['vm']}[/]  {c['profile']}")
     if out["truncated"]:
         console.print(f"  [dim]{out['hint']}[/]")
+
+
+@gpu_app.command("readiness")
+@cli_errors
+def gpu_host_readiness_cmd(
+    host: Annotated[str, typer.Option("--host", help="Filter/scope by host name (substring)")] = "",
+    target: TargetOption = None,
+    config: ConfigOption = None,
+) -> None:
+    """Report per-host vGPU/PAIS readiness (GPU + sharedDirect mode + profiles offered)."""
+    from vmware_privateai.ops.readiness import gpu_host_readiness
+
+    out = gpu_host_readiness(_get_connection(target, config), host=host or None)
+    console.print(f"\n[bold cyan]GPU host readiness ({out['returned']}/{out['total']}):[/]")
+    for h in out["items"]:
+        mark = "[green]ready[/]" if h["vgpu_ready"] else "[yellow]not ready[/]"
+        console.print(
+            f"  [cyan]{h['host']}[/]  {mark}  gpus={h['gpu_count']}  "
+            f"mode={h['default_graphics_type'] or '-'}  profiles={h['vgpu_profiles_offered']}"
+        )
+        for reason in h["blocking_reasons"]:
+            console.print(f"      [yellow]- {reason}[/]")
+    if out["unreachable_hosts"]:
+        console.print(f"  [dim]unreachable: {', '.join(out['unreachable_hosts'])}[/]")
+    if out["truncated"]:
+        console.print(f"  [dim]{out['hint']}[/]")

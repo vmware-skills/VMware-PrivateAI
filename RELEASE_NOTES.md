@@ -1,5 +1,56 @@
 # Release Notes — vmware-privateai
 
+## v0.2.0 (beta) — 2026-08-10
+
+Seven new **read / pre-flight** tools (10 → **17**; still 1 write), driven by the recurring PAIS /
+Private AI field questions in the VCF PAIS + private-ai spaces (air-gap model/bundle delivery,
+GPU-profile changes, "is my host ready", PAIS monitoring, sizing). No new destructive surface.
+
+### New tools — 5 grounded (verified data / pure computation)
+
+- `pais_sizing_advise` **[READ]** — GPU memory / GPU count / storage estimate for an LLM of a given
+  size (pure heuristic, no connection). Honest that inference is compute/HBM-bound so random IOPS is
+  the wrong axis for the weights — answers the repeated "IOPS for 27B/70B/123B" question correctly.
+- `vgpu_profile_validate` **[READ]** — pre-flight for a vGPU profile change: is the VM powered off,
+  does its host offer the target profile (with framebuffer)? Read-only companion to `vgpu_assign`
+  (answers the escalated "change GPU profile" case, SR 36933109).
+- `gpu_host_readiness` **[READ]** — per-host vGPU/PAIS readiness verdict (GPU present + `sharedDirect`
+  mode + profiles offered) with `blocking_reasons`. Honest driver_note: NVIDIA driver / MFT VIB /
+  MIG are not in the vSphere API (verify via nvidia-smi / esxcli).
+- `pais_monitoring_summary` **[READ]** — fleet GPU rollup for VCF Ops dashboards (util/mem/temp
+  avg+max, hot/idle, busiest, per-profile). Scoped honestly: deep per-SM/MIG telemetry needs DCGM.
+- `pais_bundle_verify` **[READ]** — parse a LOCAL pais.yml and list the container images + registries
+  to mirror for an air-gap, flagging public registries and mutable tags. No network / registry pull.
+
+### New tools — 2 air-gap PAIS control-plane reads (INFERRED endpoints)
+
+- `pais_model_catalog` **[READ]** — models available/approved to DEPLOY (distinct from served
+  `/models`). Path `/api/v1/control/models` is INFERRED — a 404 returns a base-URL teaching message.
+- `pais_data_source_list` **[READ]** — PAIS RAG data sources (ingest connectors feeding knowledge
+  bases). Uses the spec-listed `/api/v1/control/data-sources` (INFERRED_EXACT).
+
+### Notes
+
+- The two INFERRED PAIS paths are shipped defensively, consistent with the existing PAIS reads
+  (踩坑 #36): unconfirmed against a live OpenAPI, a 404 is translated to a config/base-URL hint,
+  never read as a bug. Final pinning is deferred to a real PAIS deployment.
+- Spec index extended (all VERIFIED): `HostSystem.config.graphicsConfig`, `VirtualMachine.runtime.host`.
+- 116 regression tests (was 71); ruff clean; bandit 0 Medium+; endpoint gate now scans the new ops modules.
+
+### Code-review hardening (pre-release)
+
+An adversarial review caught and fixed, before shipping:
+- `pais_bundle_verify` now extracts Helm-style `image: {repository, tag}` blocks and plural
+  `images: [...]` lists (previously only flat `image: "ref"` strings), and an empty result is a
+  **loud warning**, not a soft hint — a false "0 images to mirror" was the one dangerous outcome
+  for an air-gap tool (踩坑 形态 #1).
+- `vgpu_profile_validate` no longer asserts "host does not offer the profile" when the VM's
+  `runtime.host` is unknown (returns `host_offers_target: null`), and reads the host name inside the
+  guarded RPC so a mid-call host fault surfaces a teaching "unreachable", not an opaque mask (踩坑 #37).
+- `pais_sizing_advise` surfaces `size_note` when it auto-parsed the size from a model name, and warns
+  on Mixture-of-Experts `NxM` names (e.g. "Mixtral-8x7B" ≠ 7B total).
+- `gpu_host_readiness` distinguishes "unreachable" from "no vGPU profiles / driver missing".
+
 ## v0.1.0 (beta) — 2026-08-06
 
 First release. Skill #15 of the VMware skill family; the **GPU / AI-infrastructure lens** for VMware

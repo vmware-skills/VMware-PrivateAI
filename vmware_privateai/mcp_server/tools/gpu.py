@@ -155,6 +155,36 @@ def gpu_consumer_list(
         return {"error": _safe_error(exc, "gpu_consumer_list")}
 
 
+@mcp.tool(annotations=_READ)
+@vmware_tool(risk_level="low")
+def gpu_host_readiness(
+    host: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    target: Optional[str] = None,
+) -> dict:
+    """[READ] Report whether each GPU host is actually configured to serve vGPU / PAIS.
+
+    Each item has host, vgpu_ready (verdict), gpu_count, vendors, total_gpu_memory_mb,
+    default_graphics_type (must be 'sharedDirect' for vGPU), vgpu_profiles_offered,
+    active_vgpu_vms, and blocking_reasons explaining any "not ready". The NVIDIA driver / MFT
+    VIB version and MIG geometry are NOT in the vSphere API — every item carries a driver_note
+    pointing to nvidia-smi / esxcli. Only hosts that have a GPU are returned. Paginated.
+
+    Args:
+        host: Substring-match the host name (scopes the per-host profile query).
+        limit: Page size (default 50).
+        offset: Page offset.
+        target: vCenter/ESXi target from config.yaml; omit to use the default.
+    """
+    try:
+        from vmware_privateai.ops.readiness import gpu_host_readiness as _readiness
+
+        return _readiness(_get_connection(target), host=host, limit=limit, offset=offset)
+    except Exception as exc:  # noqa: BLE001
+        return {"error": _safe_error(exc, "gpu_host_readiness")}
+
+
 @mcp.tool(annotations=_WRITE)
 @vmware_tool(risk_level="high")
 def vgpu_assign(
@@ -180,8 +210,12 @@ def vgpu_assign(
         from vmware_privateai.ops.assign import assign_vgpu
 
         return assign_vgpu(
-            _get_connection(target), vm_name, profile,
-            confirm=confirm, audit_logger=_audit, target_name=_target_name(target),
+            _get_connection(target),
+            vm_name,
+            profile,
+            confirm=confirm,
+            audit_logger=_audit,
+            target_name=_target_name(target),
         )
     except Exception as exc:  # noqa: BLE001
         return {"error": _safe_error(exc, "vgpu_assign")}

@@ -21,7 +21,14 @@ from vmware_privateai.ops import pais, utilization
 
 OPS_DIR = pathlib.Path(ops_pkg.__file__).parent
 # Every ops module that hands a literal pathSet to _retrieve_props.
-_PYVMOMI_OPS_MODULES = ("gpu.py", "utilization.py", "assign.py", "vgpu_profiles.py")
+_PYVMOMI_OPS_MODULES = (
+    "gpu.py",
+    "utilization.py",
+    "assign.py",
+    "vgpu_profiles.py",
+    "readiness.py",
+    "validate.py",
+)
 
 
 def _load_spec():

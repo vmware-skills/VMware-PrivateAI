@@ -57,3 +57,25 @@ def directpath_list_cmd(
         console.print(f"  [cyan]{p['name']}[/]  id={p['id']}  vendor={p['vendor'] or '-'}  {p['description']}")
     if out["truncated"]:
         console.print(f"  [dim]{out['hint']}[/]")
+
+
+@vgpu_app.command("validate")
+@cli_errors
+def vgpu_profile_validate_cmd(
+    vm_name: Annotated[str, typer.Argument(help="VM whose vGPU profile would change")],
+    target_profile: Annotated[str, typer.Argument(help="Target vGPU profile (e.g. nvidia_a100-8c)")],
+    target: TargetOption = None,
+    config: ConfigOption = None,
+) -> None:
+    """Pre-flight a vGPU profile change (read-only): would setting VM to target_profile succeed?"""
+    from vmware_privateai.ops.validate import validate_vgpu_change
+
+    out = validate_vgpu_change(_get_connection(target, config), vm_name, target_profile)
+    verdict = "[green]can apply[/]" if out["can_apply"] else "[yellow]blocked[/]"
+    console.print(
+        f"\n[bold cyan]{out['vm']}[/] on [cyan]{out['host'] or '?'}[/]  {verdict}  "
+        f"({out['current_profile'] or 'none'} → {out['target_profile']}, {out['power_state'] or '?'})"
+    )
+    for reason in out["blocking_reasons"]:
+        console.print(f"  [yellow]- {reason}[/]")
+    console.print(f"  [dim]{out['hint']}[/]")

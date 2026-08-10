@@ -22,9 +22,15 @@ from vmware_privateai.pais.client import PaisClient
 # Exact REST path strings this module touches — asserted ⊆ spec PAIS paths by the gate (踩坑 #36).
 _MODELS_PATH = "/api/v1/compatibility/openai/v1/models"
 _KNOWLEDGE_BASES_PATH = "/api/v1/control/knowledge-bases"
-PAIS_PATHS_USED: frozenset[str] = frozenset({_MODELS_PATH, _KNOWLEDGE_BASES_PATH})
+_MODEL_CATALOG_PATH = "/api/v1/control/models"
+_DATA_SOURCES_PATH = "/api/v1/control/data-sources"
+PAIS_PATHS_USED: frozenset[str] = frozenset(
+    {_MODELS_PATH, _KNOWLEDGE_BASES_PATH, _MODEL_CATALOG_PATH, _DATA_SOURCES_PATH}
+)
 # Spec keys — asserted ⊆ PAIS_ENDPOINTS by the gate.
-PAIS_KEYS_USED: frozenset[str] = frozenset({"list_models", "list_knowledge_bases"})
+PAIS_KEYS_USED: frozenset[str] = frozenset(
+    {"list_models", "list_knowledge_bases", "list_model_catalog", "list_data_sources"}
+)
 
 
 def _as_rows(payload: Any, *keys: str) -> list:
@@ -88,3 +94,52 @@ def list_knowledge_bases(
     kbs = [kb for kb in kbs if _matches(kb["name"], name) or _matches(kb["id"], name)]
     kbs.sort(key=lambda kb: (kb["name"], kb["id"]))
     return envelope(kbs, limit=limit, offset=offset)
+
+
+def _project_catalog_model(m: Any) -> dict:
+    m = m if isinstance(m, dict) else {}
+    # Every string is operator/vendor free text reaching the agent — sanitize (injection surface).
+    return {
+        "id": _sanitize(m.get("id", "") or m.get("name", "") or ""),
+        "name": _sanitize(m.get("name", "") or ""),
+        "status": _sanitize(m.get("status", "") or m.get("state", "") or ""),
+        "source": _sanitize(m.get("source", "") or m.get("repository", "") or ""),
+    }
+
+
+def list_model_catalog(client: PaisClient, *, name: str | None = None, limit: int = 50, offset: int = 0) -> dict:
+    """List the PAIS model catalog — models available/approved to DEPLOY (not the served ``/models``).
+
+    Answers "which models are approved / what can I deploy in-house" (the air-gapped model-install
+    question). Path ``/api/v1/control/models`` is INFERRED (unconfirmed against a live OpenAPI) —
+    a 404 is translated by the client into a base-URL teaching message, never read as a bug.
+    """
+    payload = client.get_json(_MODEL_CATALOG_PATH)
+    models = [_project_catalog_model(m) for m in _as_rows(payload, "models", "items", "data")]
+    models = [m for m in models if _matches(m["id"], name) or _matches(m["name"], name)]
+    models.sort(key=lambda m: (m["name"], m["id"]))
+    return envelope(models, limit=limit, offset=offset)
+
+
+def _project_data_source(d: Any) -> dict:
+    d = d if isinstance(d, dict) else {}
+    return {
+        "id": _sanitize(d.get("id", "") or d.get("name", "") or ""),
+        "name": _sanitize(d.get("name", "") or ""),
+        "type": _sanitize(d.get("type", "") or d.get("kind", "") or ""),
+        "status": _sanitize(d.get("status", "") or d.get("state", "") or ""),
+    }
+
+
+def list_data_sources(client: PaisClient, *, name: str | None = None, limit: int = 50, offset: int = 0) -> dict:
+    """List PAIS RAG data sources (ingest connectors feeding knowledge bases). Paginated.
+
+    Path ``/api/v1/control/data-sources`` is INFERRED_EXACT (already in the spec index); a 404
+    prompts a base-URL check, not a bug report (踩坑 #36).
+    """
+    payload = client.get_json(_DATA_SOURCES_PATH)
+    rows = _as_rows(payload, "data_sources", "dataSources", "items", "data")
+    sources = [_project_data_source(d) for d in rows]
+    sources = [s for s in sources if _matches(s["name"], name) or _matches(s["id"], name)]
+    sources.sort(key=lambda s: (s["name"], s["id"]))
+    return envelope(sources, limit=limit, offset=offset)

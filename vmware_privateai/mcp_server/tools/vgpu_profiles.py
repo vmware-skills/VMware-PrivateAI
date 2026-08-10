@@ -74,3 +74,31 @@ def directpath_profile_list(
         return list_directpath_profiles(_get_connection(target), name=name, vendor=vendor, limit=limit, offset=offset)
     except Exception as exc:  # noqa: BLE001
         return {"error": _safe_error(exc, "directpath_profile_list")}
+
+
+@mcp.tool(annotations=_READ)
+@vmware_tool(risk_level="low")
+def vgpu_profile_validate(
+    vm_name: str,
+    target_profile: str,
+    target: Optional[str] = None,
+) -> dict:
+    """[READ] Pre-flight a vGPU profile change: would setting vm_name to target_profile succeed?
+
+    Read-only companion to vgpu_assign (no reconfigure). Returns can_apply plus blocking_reasons,
+    the current→target profile, power_state (must be off), and whether the VM's OWN host offers
+    the target profile (with its framebuffer). Use this before vgpu_assign to see exactly what
+    would block the change — the two ReconfigVM failure modes are "VM powered on" and "host does
+    not offer this profile".
+
+    Args:
+        vm_name: The VM whose vGPU profile would change (from gpu_consumer_list).
+        target_profile: The profile you intend to set (from vgpu_profile_list / gpu_host_get).
+        target: vCenter/ESXi target from config.yaml; omit to use the default.
+    """
+    try:
+        from vmware_privateai.ops.validate import validate_vgpu_change
+
+        return validate_vgpu_change(_get_connection(target), vm_name, target_profile)
+    except Exception as exc:  # noqa: BLE001
+        return {"error": _safe_error(exc, "vgpu_profile_validate")}
