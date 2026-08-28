@@ -12,6 +12,7 @@ import ssl
 
 from mcp.server.fastmcp import FastMCP
 
+from vmware_privateai import __version__
 from vmware_privateai.config import ConfigError
 from vmware_privateai.connection import ConnectionManager
 from vmware_privateai.notify.audit import AuditLogger
@@ -20,6 +21,11 @@ from vmware_privateai.ops._errors import PrivateAiError
 logger = logging.getLogger("vmware_privateai.mcp_server")
 
 mcp = FastMCP("vmware-privateai")
+
+# FastMCP takes no version argument and leaves the lowlevel server's at
+# None, which makes `initialize` answer with the MCP SDK's version rather
+# than ours. Set it so a client can tell which release it is talking to.
+mcp._mcp_server.version = __version__
 
 # Legacy CLI-side audit logger for write tools. The authoritative sink is
 # ~/.vmware/audit.db via @vmware_tool; this dual-writes for back-compat.
