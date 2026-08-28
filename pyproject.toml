@@ -42,6 +42,13 @@ markers = [
 ]
 addopts = "-m 'not capability'"
 
+
+[project.urls]
+Homepage = "https://github.com/vmware-skills/VMware-PrivateAI"
+Repository = "https://github.com/vmware-skills/VMware-PrivateAI"
+Issues = "https://github.com/vmware-skills/VMware-PrivateAI/issues"
+Changelog = "https://github.com/vmware-skills/VMware-PrivateAI/blob/main/RELEASE_NOTES.md"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0,<10.0",
