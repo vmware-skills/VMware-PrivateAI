@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "vmware-privateai": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "vmware-privateai==0.2.0",
+        "vmware-privateai-mcp"
+      ]
+    }
+  }
+}

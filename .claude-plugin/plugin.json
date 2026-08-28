@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "vmware-privateai",
+  "displayName": "VMware PrivateAI",
+  "version": "0.2.0",
+  "description": "VMware Private AI (NVIDIA): GPU inventory, vGPU profiles, utilization, model serving — 10 tools",
+  "author": {
+    "name": "Wei Zhou",
+    "email": "zhouwei008@gmail.com",
+    "url": "https://github.com/vmware-skills"
+  },
+  "homepage": "https://github.com/vmware-skills/VMware-PrivateAI",
+  "repository": "https://github.com/vmware-skills/VMware-PrivateAI",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "privateai",
+    "vmware",
+    "vsphere"
+  ]
+}
