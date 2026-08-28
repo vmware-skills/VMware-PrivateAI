@@ -1,5 +1,28 @@
 # Release Notes — vmware-privateai
 
+## v0.2.1 — two wrong numbers: the server's own version, and the advertised tool count
+
+Both defects were invisible to the test suites and both were user-facing.
+
+- **The MCP server reported the SDK's version as its own.** `FastMCP` accepts no
+  `version` argument and leaves the lowlevel server's at `None`; with it `None`
+  the SDK answers `initialize` with its OWN version. Every skill in the family
+  therefore told its client it was mcp 1.29.1 — a number that exists for no
+  package here, and one that would change with an SDK bump and no code change of
+  ours. Verified end to end rather than by reading: unset the field and a probe
+  server reports the installed SDK's version; set it and it reports ours.
+- **server.json advertised a stale tool count.** That number is what MCP Registry
+  publishes and what the plugin manifest and marketplace copy, so one stale
+  integer was wrong in three public places. Corrected against the registered
+  tools: 10 advertised, 17 real. README and SKILL.md were already right.
+
+Also new: this repo is installable as a Claude Code plugin
+(`/plugin install vmware-privateai@vmware-skills`). The skill and its MCP server arrive in
+one step; nothing is duplicated, the manifest points at the existing `skills/`
+tree. family_smoke gained three gates — the server's reported version, the plugin
+manifest's agreement with pyproject, and the advertised tool count against the
+live registration.
+
 ## v0.2.0 (beta) — 2026-08-10
 
 Seven new **read / pre-flight** tools (10 → **17**; still 1 write), driven by the recurring PAIS /
