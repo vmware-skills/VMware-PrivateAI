@@ -1,5 +1,38 @@
 # Release Notes — vmware-privateai
 
+## v1.0.1 — reclaiming `latest` on ClawHub
+
+**No functional change.** This release exists to fix a distribution defect, and
+the version number is the fix.
+
+The first release of this skill went out as 1.0.0 by mistake and was re-versioned
+to 0.1.0 the same day, on the reasoning that a beta belongs on a 0.x line. PyPI
+and the MCP Registry both resolve `latest` by upload order, so they followed the
+0.x line without complaint. **ClawHub resolves it by version order.** 1.0.0
+outranks every 0.x, so from the day it was published until today, `clawhub
+install @zw008/vmware-privateai` handed the user the withdrawn first build — 10
+tools, none of the seven read/pre-flight tools added in 0.2.0, and neither of the
+two defects fixed in 0.2.1. Three subsequent releases were invisible on that
+channel.
+
+Going to 1.0.1 overtakes 1.0.0 in that ordering without deleting a published
+version anyone may already depend on.
+
+**This is not a maturity claim.** The skill is still beta in substance and the
+caveats are unchanged: GET-response field names, the exact PAIS REST path, and
+the `gpu.*` perf-counter entity type remain defensive and pending validation on
+live VCF 9.1 hardware with an NVIDIA driver; MIG has no vSphere API. SKILL.md
+now says exactly this where it used to say "v0.1.0 (beta)".
+
+Contents are identical to v0.2.1: 17 tools (16 read, 1 write).
+
+### Lesson recorded
+
+Lowering a version number costs more than it looks. The family handbook already
+warned that a downgrade fights the ordering on PyPI and the registry; it did not
+know ClawHub picks the maximum. A withdrawn version is only withdrawn on the
+channels that agree it is.
+
 ## v0.2.1 — two wrong numbers: the server's own version, and the advertised tool count
 
 Both defects were invisible to the test suites and both were user-facing.

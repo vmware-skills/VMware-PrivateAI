@@ -36,7 +36,10 @@ Web Services API (pyVmomi) plus the PAIS REST API.
 > (GPU-enabled Tanzu Kubernetes), [vmware-monitor](https://github.com/vmware-skills/VMware-Monitor)
 > (read-only vSphere health).
 
-> **Status: v0.1.0 (beta).** Skill #15 of the family; independent 1.x version line. Every API path is
+> **Status: v1.0.1 — still beta in substance.** Skill #15 of the family. The jump from 0.2.x to
+> 1.0.1 is a distribution fix, not a maturity claim: the withdrawn first release used 1.0.0, and
+> ClawHub resolves `latest` by version order, so every 0.x release was invisible there. The beta
+> caveats below all still stand. Every API path is
 > verified against official Broadcom/NVIDIA sources before use (`tests/eval/spec/privateai_endpoints.py`)
 > — no endpoints written from memory. GET-response *field names* and the exact PAIS paths are
 > defensive and pending validation against live 9.x hardware (see Troubleshooting). Governed by the
