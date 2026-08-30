@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vmware-privateai"
-version = "1.0.1"
+version = "1.0.2"
 description = "VMware Private AI Foundation with NVIDIA ops — GPU inventory, vGPU/DirectPath profiles, utilization, model-serving (MCP + CLI)"
 readme = "README.md"
 license = "MIT"

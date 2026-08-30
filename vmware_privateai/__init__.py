@@ -5,4 +5,4 @@ assignment, and Private AI Service (PAIS) model-serving — over vSphere 9.x /
 VCF 9.1, with the family's governed-ops harness (audit + policy + teaching errors).
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
