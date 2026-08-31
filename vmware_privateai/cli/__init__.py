@@ -56,6 +56,14 @@ def version() -> None:
 
 
 @app.command()
+def doctor() -> None:
+    """Diagnose config, credentials, SDK and vCenter connectivity."""
+    from vmware_privateai.doctor import run_doctor
+
+    raise typer.Exit(0 if run_doctor() else 1)
+
+
+@app.command()
 def mcp() -> None:
     """Run the MCP server over stdio (used by MCP clients as `vmware-privateai mcp`)."""
     from vmware_privateai.mcp_server.server import main
