@@ -1,3 +1,16 @@
+## v1.1.0 — a doctor, so a failure has somewhere to look
+
+This was the only skill in the family with no self-check of any kind. An operator
+whose config or credentials were wrong had nowhere to start: the first symptom
+was a failing tool call, with no way to tell a bad password from an unreachable
+vCenter from a missing pyVmomi. `vmware-privateai doctor` runs the checks in the
+order a failure actually cascades — config file, `.env` and its permissions, SDK,
+then the connection itself. Verified against a live vCenter 8.0.3.
+
+Also: `.env` permissions go through `vmware_policy.fsperms` instead of POSIX mode
+bits, which are absent on Windows and made the old `chmod 600` remedy inert on
+the platform it was warning about.
+
 ## v1.0.4 — the test suite runs on a non-UTF-8 machine, and the guardrail tests with it
 
 
