@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "vmware-privateai",
   "displayName": "VMware PrivateAI",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "VMware Private AI (NVIDIA): GPU inventory, vGPU profiles, utilization, model serving — 17 tools",
   "author": {
     "name": "Wei Zhou",
