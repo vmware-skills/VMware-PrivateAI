@@ -211,9 +211,34 @@ class AppConfig:
         return self.targets[0]
 
 
+#: Names the config file to read instead of :data:`CONFIG_FILE`.
+CONFIG_ENV_VAR = "VMWARE_PRIVATEAI_CONFIG"
+
+
+def resolve_config_path(config_path: Path | None = None) -> Path:
+    """Which config file this skill will read: explicit arg, env var, default.
+
+    The single place that precedence lives. Before 2026-09-11 the policy
+    environment resolver honoured ``VMWARE_PRIVATEAI_CONFIG`` (through
+    ``mtime_cached_loader``, which hands the variable's path to the loader) while
+    ``load_config()`` — and so the CLI, the MCP server's connection and the
+    doctor — ignored it. With the variable set, a production target was judged
+    by one file's ``environment`` label and connected to from another: a
+    ``freeze-production-writes`` rule could read a lab label and allow the write.
+
+    ``~`` is expanded: the setup guide's MCP snippets set the variable to
+    ``~/.vmware-privateai/config.yaml``, and an MCP host passes that string
+    through unexpanded.
+    """
+    if config_path is not None:
+        return Path(config_path).expanduser()
+    env_override = os.environ.get(CONFIG_ENV_VAR)
+    return Path(env_override).expanduser() if env_override else CONFIG_FILE
+
+
 def load_config(config_path: Path | None = None) -> AppConfig:
     """Load config from YAML file, with env var overrides for passwords."""
-    path = config_path or CONFIG_FILE
+    path = resolve_config_path(config_path)
     if not path.exists():
         raise FileNotFoundError(
             f"Config file not found: {path}\n"

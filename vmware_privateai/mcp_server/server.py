@@ -12,21 +12,16 @@ FastMCP/Pydantic reflect them at import time.
 
 from __future__ import annotations
 
+from vmware_policy import (
+    describe_tool_parameters,
+)
+
 from vmware_privateai.mcp_server._shared import mcp
 from vmware_privateai.mcp_server.tools import (
     advisor,  # noqa: F401  (registers sizing / bundle advisor tools — no connection)
     gpu,  # noqa: F401  (registers GPU inventory + host-readiness tools)
     pais,  # noqa: F401  (registers PAIS model/KB/catalog/data-source/monitoring tools)
     vgpu_profiles,  # noqa: F401  (registers profile-catalog + profile-validate tools)
-)
-
-
-from vmware_privateai.config import CONFIG_FILE, load_config
-from vmware_policy import (
-    describe_tool_parameters,
-    mtime_cached_loader,
-    set_environment_resolver,
-    skill_name,
 )
 
 # The docstrings in the tool modules imported above are the schema.
@@ -39,39 +34,10 @@ from vmware_policy import (
 _DESCRIBED_PARAMS = describe_tool_parameters(mcp._tool_manager._tools)
 
 
-# ── environment resolver ─────────────────────────────────────────────────────
-#
-# Policy rules scope by environment ("irreversible work in production needs a
-# second person"), and vmware_policy cannot read this skill's config itself —
-# registering this lookup is what lets those rules fire at all. Without it every
-# target reads as undeclared and no environment-scoped rule ever matches.
-#
-# This skill's config has carried `environment_for` since it shipped; the
-# registration was simply never wired, and the family gate that should have
-# caught it did not list this repo. Both are fixed together (2026-08-30).
-_cached_config = mtime_cached_loader("VMWARE_PRIVATEAI_CONFIG", CONFIG_FILE, load_config)
-
-
-def _environment_for(target: str | None) -> str:
-    """The environment label for ``target``, or "" when it cannot be read.
-
-    An unreadable config means *undeclared*, not *production*: guessing the
-    strict label here would refuse work the operator never scoped, and guessing
-    the loose one would be the fail-open this family keeps finding. Undeclared
-    is the honest answer and the one vmware_policy documents.
-    """
-    try:
-        return _cached_config().environment_for(target)
-    except Exception:  # noqa: BLE001 — an unreadable config means "undeclared"
-        return ""
-
-
-# Keyed by skill: the registry used to be one process-global slot, and a
-# bare `import` of any sibling's server module replaced whichever resolver
-# was there -- measured turning a freeze-production-writes rule from DENY
-# to ALLOW. Keyed, a resolver only ever answers for its own skill, so
-# registering at import time is safe again.
-set_environment_resolver(_environment_for, skill=skill_name(__name__))
+# The environment resolver lives in policy_environment so the CLI registers
+# it too (its @guarded writes go through the same guard()); importing it here
+# registers it for the MCP surface.
+from vmware_privateai.policy_environment import _cached_config, _environment_for  # noqa: E402,F401
 
 
 def main() -> None:

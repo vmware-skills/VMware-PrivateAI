@@ -18,7 +18,12 @@ from pathlib import Path
 
 import yaml
 
-from vmware_privateai.config import CONFIG_FILE, ENV_FILE, ConfigError, _decode_secret
+from vmware_privateai.config import (
+    ENV_FILE,
+    ConfigError,
+    _decode_secret,
+    resolve_config_path,
+)
 
 TOKEN_ENV_VAR = "VMWARE_PRIVATEAI_PAIS_TOKEN"
 
@@ -55,7 +60,7 @@ def load_pais_config(config_path: Path | None = None) -> PaisConfig:
     ``pais.endpoint`` is configured — so a PAIS tool used without setup routes the operator
     to fix config rather than dumping a traceback.
     """
-    path = config_path or CONFIG_FILE
+    path = resolve_config_path(config_path)
     if not path.exists():
         raise FileNotFoundError(
             f"Config file not found: {path}\n"
@@ -70,7 +75,7 @@ def load_pais_config(config_path: Path | None = None) -> PaisConfig:
     if not endpoint:
         raise ConfigError(
             f"No PAIS endpoint configured. Add a 'pais:' section with an 'endpoint:' "
-            f"(the Private AI Service base URL) to {CONFIG_FILE}, and set {TOKEN_ENV_VAR} "
+            f"(the Private AI Service base URL) to {path}, and set {TOKEN_ENV_VAR} "
             f"with a bearer token, then re-run."
         )
     return PaisConfig(endpoint=endpoint, verify_ssl=bool(pais.get("verify_ssl", True)))

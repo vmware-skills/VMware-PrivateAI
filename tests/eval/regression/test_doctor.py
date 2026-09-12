@@ -35,7 +35,7 @@ def _green(tmp: Path, monkeypatch, *, env: bool = True, mode: int = 0o600, targe
     """A doctor run in which every check passes. Tests break one thing from here."""
     cfg = tmp / "config.yaml"
     cfg.write_text("targets: []\n", encoding="utf-8")
-    monkeypatch.setattr(doctor, "CONFIG_FILE", cfg)
+    monkeypatch.setattr(doctor, "resolve_config_path", lambda: cfg)
 
     envf = tmp / ".env"
     if env:

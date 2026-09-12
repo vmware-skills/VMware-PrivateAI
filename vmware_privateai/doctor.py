@@ -18,7 +18,7 @@ from rich.console import Console
 
 from vmware_policy.fsperms import check_secret_file
 
-from vmware_privateai.config import CONFIG_FILE, ENV_FILE, load_config
+from vmware_privateai.config import ENV_FILE, load_config, resolve_config_path
 
 _log = logging.getLogger("vmware-privateai.doctor")
 console = Console()
@@ -37,17 +37,20 @@ def run_doctor() -> bool:
     """Run all diagnostic checks. Returns True if every check passed."""
     console.print("\n[bold]vmware-privateai doctor[/bold]\n")
 
-    if not CONFIG_FILE.exists():
+    # The file every other reader opens — VMWARE_PRIVATEAI_CONFIG included — so
+    # the doctor never reports a different config green.
+    config_file = resolve_config_path()
+    if not config_file.exists():
         console.print(
-            f"[yellow]No config found.[/yellow] Create {CONFIG_FILE} and {ENV_FILE} "
+            f"[yellow]No config found.[/yellow] Create {config_file} and {ENV_FILE} "
             "(see config.example.yaml), then re-run.\n"
         )
 
     results: list[bool] = []
     results.append(
-        _check("Config directory exists", CONFIG_FILE.parent.exists(), str(CONFIG_FILE.parent))
+        _check("Config directory exists", config_file.parent.exists(), str(config_file.parent))
     )
-    results.append(_check("config.yaml exists", CONFIG_FILE.exists(), str(CONFIG_FILE)))
+    results.append(_check("config.yaml exists", config_file.exists(), str(config_file)))
 
     env_exists = ENV_FILE.exists()
     results.append(_check(".env file exists", env_exists, str(ENV_FILE)))
@@ -73,7 +76,7 @@ def run_doctor() -> bool:
     except ImportError:
         results.append(_check("vmware-policy installed", False, "pip install vmware-policy"))
 
-    if CONFIG_FILE.exists():
+    if config_file.exists():
         try:
             cfg = load_config()
             targets = getattr(cfg, "targets", []) or []

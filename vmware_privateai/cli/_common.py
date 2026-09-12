@@ -14,7 +14,11 @@ from typing import Annotated
 
 import typer
 from rich.console import Console
-from vmware_policy import guarded  # noqa: F401  (re-exported for write commands)
+from rich.markup import escape
+from vmware_policy import (
+    PolicyDenied,
+    guarded,  # noqa: F401  (re-exported for write commands)
+)
 
 from vmware_privateai.config import ConfigError, load_config
 from vmware_privateai.connection import ConnectionManager
@@ -57,6 +61,13 @@ def cli_errors(fn: Callable) -> Callable:
     def wrapper(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
+        except PolicyDenied as exc:
+            # A deny rule or maintenance window refused this write. @guarded already
+            # wrote the status="denied" audit row; say which rule fired instead of
+            # letting a traceback out (PolicyDenied is not a teaching error type).
+            rule = f" [dim](rule: {escape(exc.result.rule)})[/]" if exc.result.rule else ""
+            console.print(f"[red]Denied by policy: {escape(exc.result.reason)}[/]{rule}")
+            raise typer.Exit(1) from exc
         except ssl.SSLError:
             # SSLError is a ValueError subclass — mask before the pass-through (review H2).
             console.print("[red]error:[/] TLS/certificate error (set verify_ssl: false for self-signed certs).")

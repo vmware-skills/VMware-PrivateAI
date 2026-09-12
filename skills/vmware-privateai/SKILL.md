@@ -16,7 +16,7 @@ installer:
   package: vmware-privateai
 allowed-tools:
   - Bash
-metadata: {"openclaw":{"requires":{"env":["VMWARE_PRIVATEAI_CONFIG"],"bins":["vmware-privateai"],"config":["~/.vmware-privateai/config.yaml"]},"primaryEnv":"VMWARE_PRIVATEAI_CONFIG"}}
+metadata: {"openclaw":{"requires":{"anyBins":["vmware-privateai","uvx"]},"optional":{"env":["VMWARE_PRIVATEAI_CONFIG"]}}}
 ---
 
 # VMware Private AI (Foundation with NVIDIA) — GPU & Model-Serving Ops
@@ -67,7 +67,7 @@ double-confirmed at the CLI, and is audit-logged. Pre-flight the write with `vgp
 ## Quick Install
 
 ```bash
-uv tool install vmware-privateai
+uv tool install vmware-privateai==1.2.0
 vmware-privateai version
 vmware-privateai gpu host-list        # first read — lists hosts that have a GPU
 ```

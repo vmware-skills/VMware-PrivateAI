@@ -112,7 +112,7 @@ def gpu_utilization_cmd(
 
 @gpu_app.command("vgpu-assign")
 @cli_errors
-@guarded(risk_level="high")
+@guarded("vgpu_assign", risk_level="high")
 def vgpu_assign_cmd(
     vm_name: Annotated[str, typer.Argument(help="VM to reconfigure (from consumer-list)")],
     profile: Annotated[str, typer.Argument(help="Target vGPU profile (from host-get)")],

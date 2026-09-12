@@ -14,6 +14,9 @@ from vmware_privateai.cli.gpu import gpu_app
 from vmware_privateai.cli.pais import pais_app
 from vmware_privateai.cli.vgpu import vgpu_app
 import sys
+# Registers this skill's environment resolver, so environment-scoped policy
+# rules apply to @guarded CLI writes exactly as they do to MCP tools.
+import vmware_privateai.policy_environment  # noqa: E402,F401
 
 
 def _harden_console_encoding() -> None:

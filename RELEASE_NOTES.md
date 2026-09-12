@@ -1,3 +1,52 @@
+## v1.2.0 — CLI writes answer to the same rules as the MCP tools
+
+A write refused by a policy rule ended in a traceback; it now prints which rule refused it and
+exits 1.
+
+**CLI writes are authorised and audited under their MCP tool names.** `gpu vgpu-assign` is now `@guarded("vgpu_assign", risk_level="high")`. It was
+guarded under its Python function name, `vgpu_assign_cmd`, so a policy rule
+naming the MCP tool — `operations: ["vgpu_assign"]` — refused the agent and let
+the identical reconfigure through the CLI, and the shared audit database
+recorded the two surfaces under two names. One deny rule now scopes both.
+
+Audit rows for this command carry `vgpu_assign` from this release on; rows
+written earlier say `vgpu_assign_cmd`. A rule that was written against the old
+CLI name should be changed to `vgpu_assign`.
+
+New regression test `tests/eval/regression/test_cli_writes_guarded.py`: every
+CLI command that calls a `[WRITE]` ops function must be `@guarded`, under the
+name and risk level of the MCP write tool that calls the same ops function
+(derived by AST, with a floor so a scan that matches nothing fails), plus an
+end-to-end check that a deny rule naming `vgpu_assign` stops the CLI command
+before it connects.
+
+**Environment-scoped deny rules now apply to CLI writes.** The skill's environment resolver was
+registered only when the MCP server was imported, which the CLI never does — so a
+`freeze-production-writes` rule stopped the MCP tool and not the CLI command doing the same
+thing. It now lives in `policy_environment.py`, imported by both surfaces. (With vmware-policy
+1.13.1 the CLI's `--config` file is the one whose labels are judged.)
+
+**`VMWARE_PRIVATEAI_CONFIG` is honoured by every reader, not only by policy.** The environment
+resolver read the file the variable names, while `load_config()` — and with it the CLI, the MCP
+server's connection, the PAIS tools and `doctor` — always opened `~/.vmware-privateai/config.yaml`.
+With the variable set, a write could be judged by one file's `environment` label and connect to a
+target defined in the other: a production vCenter labelled `lab` passes a
+`freeze-production-writes` rule. One function, `resolve_config_path`, now decides for all of
+them (explicit `--config`, then the variable, then the default), and a leading `~` in the variable
+is expanded — the setup guide's MCP snippets use one, and unexpanded it named no file at all. **If
+you set the variable, the CLI and the MCP tools now use that file.**
+
+**OpenClaw could not show this skill to the model.** `metadata.openclaw.requires` listed
+config *file paths* under `requires.config`, which OpenClaw reads as `openclaw.json` keys that
+must be truthy — so the skill was "needs setup / not visible to the model" whatever was on disk
+(verified on OpenClaw 2026.6.35). `requires.env` named an optional override and `requires.bins`
+demanded a CLI that a plugin install (uvx) never has. `requires` is now `anyBins: [<cli>, "uvx"]`;
+the variables are still declared, under `optional.env`.
+
+**Install commands in the skill pin this release.** ClawHub reviews SKILL.md and references/,
+not the package they install, so an unpinned `uv tool install` vouched for code nobody reviewed.
+Every install command for this package in the skill now names this version.
+
 ## v1.1.1 — a dropped connection no longer keeps itself alive
 
 Every `connect()` registered an `atexit` cleanup that closes over the
