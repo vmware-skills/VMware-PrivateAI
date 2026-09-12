@@ -1,0 +1,20 @@
+{
+  "name": "@zw008/vmware-privateai",
+  "version": "1.2.0",
+  "description": "VMware Private AI (NVIDIA): GPU inventory, vGPU profiles, utilization, model serving — 17 tools",
+  "private": true,
+  "license": "MIT",
+  "homepage": "https://github.com/vmware-skills/VMware-PrivateAI",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vmware-skills/VMware-PrivateAI.git"
+  },
+  "openclaw": {
+    "compat": {
+      "pluginApi": ">=2026.3.24-beta.2"
+    },
+    "build": {
+      "openclawVersion": "2026.3.24-beta.2"
+    }
+  }
+}

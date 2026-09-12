@@ -1,0 +1,24 @@
+{
+  "id": "vmware-privateai",
+  "name": "VMware PrivateAI",
+  "description": "VMware Private AI (NVIDIA): GPU inventory, vGPU profiles, utilization, model serving — 17 tools",
+  "skills": [
+    "./skills"
+  ],
+  "mcpServers": {
+    "vmware-privateai": {
+      "transport": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "vmware-privateai==1.2.0",
+        "vmware-privateai-mcp"
+      ]
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}
