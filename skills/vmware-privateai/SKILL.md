@@ -67,7 +67,7 @@ double-confirmed at the CLI, and is audit-logged. Pre-flight the write with `vgp
 ## Quick Install
 
 ```bash
-uv tool install vmware-privateai==1.2.1
+uv tool install vmware-privateai==1.2.2
 vmware-privateai version
 vmware-privateai gpu host-list        # first read — lists hosts that have a GPU
 ```
