@@ -10,7 +10,7 @@ Install, credential, and MCP-client configuration for vmware-privateai, plus the
 ## 1. Install
 
 ```bash
-uv tool install vmware-privateai==1.2.0       # isolated tool env; puts vmware-privateai on PATH
+uv tool install vmware-privateai==1.2.1       # isolated tool env; puts vmware-privateai on PATH
 vmware-privateai version
 ```
 
@@ -91,7 +91,7 @@ Fallback (`uvx` — re-resolves from PyPI each start; if your network runs a TLS
   "mcpServers": {
     "vmware-privateai": {
       "command": "uvx",
-      "args": ["--from", "vmware-privateai==1.2.0", "vmware-privateai-mcp"],
+      "args": ["--from", "vmware-privateai==1.2.1", "vmware-privateai-mcp"],
       "env": { "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml" }
     }
   }

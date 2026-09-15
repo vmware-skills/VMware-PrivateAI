@@ -11,6 +11,7 @@ from typing import Annotated
 import typer
 
 from vmware_privateai.cli._common import ConfigOption, TargetOption, _get_connection, cli_errors, console
+from vmware_policy import audited, cli_local
 
 pais_app = typer.Typer(help="Private AI Service: models, knowledge bases, monitoring, sizing, air-gap.")
 
@@ -27,6 +28,7 @@ def _client(config: str | None):
 
 @pais_app.command("model-list")
 @cli_errors
+@audited("pais_model_list")
 def pais_model_list_cmd(
     name: Annotated[str, typer.Option("--name", help="Filter by model id (substring)")] = "",
     config: ConfigOption = None,
@@ -45,6 +47,7 @@ def pais_model_list_cmd(
 
 @pais_app.command("kb-list")
 @cli_errors
+@audited("pais_knowledge_base_list")
 def pais_kb_list_cmd(
     name: Annotated[str, typer.Option("--name", help="Filter by KB name/id (substring)")] = "",
     config: ConfigOption = None,
@@ -63,6 +66,7 @@ def pais_kb_list_cmd(
 
 @pais_app.command("model-catalog")
 @cli_errors
+@audited("pais_model_catalog")
 def pais_model_catalog_cmd(
     name: Annotated[str, typer.Option("--name", help="Filter by model id/name (substring)")] = "",
     config: ConfigOption = None,
@@ -81,6 +85,7 @@ def pais_model_catalog_cmd(
 
 @pais_app.command("data-source-list")
 @cli_errors
+@audited("pais_data_source_list")
 def pais_data_source_list_cmd(
     name: Annotated[str, typer.Option("--name", help="Filter by data-source name/id (substring)")] = "",
     config: ConfigOption = None,
@@ -99,6 +104,7 @@ def pais_data_source_list_cmd(
 
 @pais_app.command("monitoring-summary")
 @cli_errors
+@audited("pais_monitoring_summary")
 def pais_monitoring_summary_cmd(
     hot_pct: Annotated[float, typer.Option("--hot-pct", help="gpu_pct at/above which a VM is 'hot'")] = 90.0,
     top: Annotated[int, typer.Option("--top", help="How many busiest VMs to show")] = 5,
@@ -125,6 +131,7 @@ def pais_monitoring_summary_cmd(
 
 @pais_app.command("sizing")
 @cli_errors
+@cli_local("computes a sizing estimate locally; contacts nothing")
 def pais_sizing_cmd(
     model: Annotated[str, typer.Option("--model", help="Model name containing size, e.g. llama-70b")] = "",
     billions: Annotated[float, typer.Option("--billions", help="Params in billions (overrides --model)")] = 0.0,
@@ -146,6 +153,7 @@ def pais_sizing_cmd(
 
 @pais_app.command("bundle-verify")
 @cli_errors
+@cli_local("parses a local PAIS bundle manifest; contacts nothing")
 def pais_bundle_verify_cmd(
     manifest_path: Annotated[str, typer.Argument(help="Path to a local pais.yml / bundle manifest")],
 ) -> None:

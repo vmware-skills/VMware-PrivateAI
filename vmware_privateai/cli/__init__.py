@@ -17,6 +17,7 @@ import sys
 # Registers this skill's environment resolver, so environment-scoped policy
 # rules apply to @guarded CLI writes exactly as they do to MCP tools.
 import vmware_privateai.policy_environment  # noqa: E402,F401
+from vmware_policy import audited, cli_local
 
 
 def _harden_console_encoding() -> None:
@@ -53,12 +54,14 @@ app.add_typer(pais_app, name="pais")
 
 
 @app.command()
+@cli_local("prints the installed version")
 def version() -> None:
     """Print the vmware-privateai version."""
     typer.echo(__version__)
 
 
 @app.command()
+@audited("doctor")
 def doctor() -> None:
     """Diagnose config, credentials, SDK and vCenter connectivity."""
     from vmware_privateai.doctor import run_doctor
@@ -67,6 +70,7 @@ def doctor() -> None:
 
 
 @app.command()
+@cli_local("starts the MCP server; its tools audit themselves")
 def mcp() -> None:
     """Run the MCP server over stdio (used by MCP clients as `vmware-privateai mcp`)."""
     from vmware_privateai.mcp_server.server import main
