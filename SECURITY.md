@@ -31,9 +31,11 @@ dedicated service account scoped to the GPU clusters.
 ### `vgpu_assign` write safety
 `vgpu_assign` is the only state-changing tool. Its safety model:
 - **Power-off gate.** A vGPU change requires the VM to be powered **off** (no hot-add, no vMotion for
-  passthrough — VERIFIED). `confirm=false` (the default) previews only — current profile, target
-  profile, power state, and `requires_power_off` — without acting. `confirm=true` applies it but refuses
-  a powered-on VM with a teaching error.
+  passthrough — VERIFIED). `confirm=false` (the default) returns `blast_radius` — VM name and id,
+  current and target profile, edit-or-add, power state, `blockers`, `unmeasured` — and changes nothing.
+  `confirm=true` applies it but refuses, with a teaching error, a powered-on or suspended VM, a name
+  shared by several VMs, and a VM whose power state or device list could not be read (an unread device
+  list is never taken as "no vGPU", which would add a second device).
 - **Never powers the VM off itself.** Powering the VM off is `vmware-aiops`'s job, kept separate so this
   tool's blast radius stays "one VM, when it is already off". The refusal routes the operator to
   `vmware-aiops vm_power_off`.

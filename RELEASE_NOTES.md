@@ -1,3 +1,34 @@
+## v1.3.0 — vgpu_assign states its blast radius and refuses to act blind
+
+**Behaviour changes for callers (breaking first):**
+
+* `confirm=True` is now **refused** — a teaching error, on MCP `{"error": ...}` audited as a failure — in
+  three cases that used to go ahead:
+  * a **suspended** VM (it was only refused when powered on);
+  * **several VMs with the same name** (the first one vCenter returned was reconfigured);
+  * a VM whose **power state or device list could not be read**. An unread device list was treated as
+    "no vGPU", so the reconfigure *added* a vGPU device next to the one it could not see.
+  The CLI calls the same function, so `gpu vgpu-assign` refuses in the same cases.
+* The powered-on refusal now ends "then preview again" instead of "then re-run with confirm=true".
+* The preview now includes `"action": "preview"`; the acting response `"action": "applied"`.
+
+**Additive:**
+
+* Preview and acting responses carry a `blast_radius` dict: `vm`, `vm_id`, `same_name_vm_ids`,
+  `power_state`, `current_profile`, `target_profile`, `device_change` (`edit` the existing vGPU device or
+  `add` one), `other_passthrough_devices` (left untouched), `memory_reservation_locked_to_max`,
+  `requires_power_off`, `blockers`, `unmeasured`.
+* The top-level `current_profile`, `target_profile`, `power_state`, `requires_power_off` and `applied`
+  keys are still returned. **Deprecated: removed in the next minor release** (except `applied`) — read
+  `blast_radius`.
+* Wording (HLD §7): the `confirm` parameter reads "False (default) returns the blast radius and changes
+  nothing. True applies it"; the description tells the model not to set `confirm=True` on its own
+  because the user asked earlier. The preview hint says to show `blast_radius` to the user and re-run
+  with `confirm=True` only after they agree; `vgpu_profile_validate`'s "Ready" hint no longer says
+  "run vgpu_assign(..., confirm=true) to apply".
+* Requires `vmware-policy>=1.17.0`, which audits a `confirm=False` preview as `dry_run` and redacts long
+  audit text in linear time.
+
 ## v1.2.3 — a stopped MCP server exits within five seconds, even if its logout hangs
 
 A correction to 1.2.2, from an independent review on 2026-09-15. 1.2.2 made the server log out when Claude Code

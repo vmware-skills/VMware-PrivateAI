@@ -97,8 +97,14 @@ air-gap blockers (public registries to mirror, mutable tags); it never contacts 
 |------|:---:|:----:|--------------|
 | `vgpu_assign` | W | high | one VM, **only when powered off** — sets/replaces its vGPU profile via ReconfigVM |
 
-`confirm=false` (default) previews (current→target profile, power_state, requires_power_off, applied:false)
-without acting. `confirm=true` applies it but refuses a powered-on VM with a teaching error. It edits the
+`confirm=false` (default) returns `{"action": "preview", "blast_radius": {...}, "hint": ...}` and changes
+nothing. `blast_radius`: `vm`, `vm_id`, `same_name_vm_ids`, `power_state`, `current_profile`,
+`target_profile`, `device_change` (`edit`/`add`), `other_passthrough_devices`,
+`memory_reservation_locked_to_max`, `requires_power_off`, `blockers`, `unmeasured`; the acting response
+(`action: "applied"`) carries it too. The older top-level keys (`current_profile`, `target_profile`,
+`power_state`, `requires_power_off`) are still returned and are removed in the next minor release.
+`confirm=true` refuses a powered-on or suspended VM, a name shared by several VMs, and an unreadable power
+state or device list. It edits the
 VM's **existing vGPU device** (selected by the same predicate the preview uses, never a plain
 DirectPath/SR-IOV passthrough), waits for the real ReconfigVM task outcome (never a premature "ok"), and
 audits the result. It never powers the VM off itself — that is `vmware-aiops`.

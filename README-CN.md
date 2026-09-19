@@ -31,6 +31,9 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 
 读操作严格无破坏性。唯一的写(`vgpu_assign`)会预览爆炸半径、拒绝已开机虚机、**绝不自行关机**、
 CLI 双重确认、统一审计到 `~/.vmware/audit.db`;可先用 `vgpu_profile_validate` 预检。
+`vgpu_assign` 的 `confirm` 默认 `false`:不带它调用时返回 `blast_radius` —— 虚机名称与 id、当前与目标配置、
+是修改已有 vGPU 设备还是新增一个、电源状态、`blockers` 与 `unmeasured` —— 不做任何改动。已开机或挂起的虚机、
+多台虚机同名、电源状态或设备列表读不到时,`confirm=true` 会被拒绝。它绝不会自行给虚机关机。
 `pais_model_catalog` / `pais_data_source_list` 走未确认的 PAIS 控制面路径(踩坑 #36:404 返回 base-URL
 教学提示,不当 bug);`pais_sizing_advise` / `pais_bundle_verify` 无需连接(纯计算 / 本地文件解析)。
 

@@ -67,7 +67,7 @@ double-confirmed at the CLI, and is audit-logged. Pre-flight the write with `vgp
 ## Quick Install
 
 ```bash
-uv tool install vmware-privateai==1.2.3
+uv tool install vmware-privateai==1.3.0
 vmware-privateai version
 vmware-privateai gpu host-list        # first read — lists hosts that have a GPU
 ```
@@ -165,10 +165,13 @@ so where it cannot (NVIDIA driver / MFT VIB / MIG need nvidia-smi on the host).
 with `truncated:false` means checked-and-none, not a failure. Lists paginate at `limit=50`; filter with
 the tool's `name`/`vendor`/`host`/`profile`/`vm` arguments rather than paging the whole estate.
 
-**Write safety (normative)**: `vgpu_assign` with `confirm=false` (the default) previews only —
-current profile, target profile, power state, and that a power-off is required — without acting.
-`confirm=true` applies it, but refuses a powered-on VM with a teaching error. It **never powers the VM
-off itself**, waits for the real ReconfigVM task outcome (never a premature "ok"), and audits every
+**Write safety (normative)**: `vgpu_assign` with `confirm=false` (the default) returns `blast_radius`
+and changes nothing — VM name and id, current and target profile, `device_change` (`edit` the existing
+vGPU device or `add` one), other passthrough devices left untouched, power state, `blockers`,
+`unmeasured`. The acting response carries it too. Show it to the user and pass `confirm=true` only after
+they agree — the user asking earlier is not agreement, they have not seen it. `confirm=true` is refused
+for a powered-on or suspended VM, a name shared by several VMs, and an unreadable power state or device
+list. It **never powers the VM off itself**, waits for the real ReconfigVM task outcome (never a premature "ok"), and audits every
 applied change to `~/.vmware/audit.db`.
 
 ## CLI Quick Reference

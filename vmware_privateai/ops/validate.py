@@ -48,8 +48,8 @@ def validate_vgpu_change(si: Any, vm_name: str, target_profile: str) -> dict:
 
     Returns a read-only verdict: ``can_apply`` plus ``blocking_reasons``, the current→target
     profiles, the VM power state, and whether the VM's host offers the target profile (with its
-    framebuffer). Does NOT reconfigure anything — run vgpu_assign (confirm=true) to apply once
-    ``can_apply`` is true.
+    framebuffer). Does NOT reconfigure anything — once ``can_apply`` is true, vgpu_assign
+    previews the change; it applies with confirm=true only after the user agrees.
     """
     if not target_profile:
         raise GpuNotFoundError(
@@ -109,7 +109,8 @@ def validate_vgpu_change(si: Any, vm_name: str, target_profile: str) -> dict:
         "can_apply": can_apply,
         "blocking_reasons": reasons,
         "hint": (
-            f"Ready — run vgpu_assign('{vm_name}', '{target_profile}', confirm=true) to apply."
+            f"Ready — call vgpu_assign('{vm_name}', '{target_profile}') without confirm to see its "
+            f"blast_radius, show it to the user, and apply with confirm=true only after they agree."
             if can_apply
             else "Resolve blocking_reasons, then re-validate before vgpu_assign."
         ),

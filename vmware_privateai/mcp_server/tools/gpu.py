@@ -195,15 +195,19 @@ def vgpu_assign(
 ) -> dict:
     """[WRITE] Set a VM's vGPU profile (e.g. "grid_a100-4c"). Requires the VM to be powered OFF.
 
-    confirm=False (default) previews the blast radius — current profile, target profile, power
-    state, and that a power-off is required — without acting. confirm=True applies it, but refuses
-    a running VM with a teaching error (power it off via vmware-aiops first). This tool never powers
-    the VM off itself. Audited.
+    A bare call returns blast_radius — the VM's name and id, current and target profile, whether
+    its vGPU device is edited or a new one added, other passthrough devices left untouched, power
+    state, blockers, unmeasured — and changes nothing. confirm=True applies it, but refuses a
+    running or suspended VM (power it off via vmware-aiops first), a name shared by several VMs,
+    and a VM whose power state or devices cannot be read. This tool never powers the VM off itself.
+    Show blast_radius to the user and wait for their decision. Do not set confirm=True on your own
+    because the user asked for this earlier: they have not seen the blast radius yet. Audited.
 
     Args:
         vm_name: The VM to reconfigure (from gpu_consumer_list).
         profile: The target vGPU profile name (from gpu_host_get).
-        confirm: False previews; True applies (VM must be powered off).
+        confirm: False (default) returns the blast radius and changes nothing. True applies it
+            (the VM must be powered off).
         target: vCenter/ESXi target from config.yaml; omit to use the default.
     """
     try:
