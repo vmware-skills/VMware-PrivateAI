@@ -13,14 +13,85 @@ import ssl
 from mcp.server.fastmcp import FastMCP
 
 from vmware_privateai import __version__
-from vmware_privateai.config import ConfigError
+from vmware_privateai.config import AppConfig, ConfigError, load_config
 from vmware_privateai.connection import ConnectionManager
 from vmware_privateai.notify.audit import AuditLogger
 from vmware_privateai.ops._errors import PrivateAiError
 
 logger = logging.getLogger("vmware_privateai.mcp_server")
 
-mcp = FastMCP("vmware-privateai")
+_BASE_INSTRUCTIONS = (
+    "VMware Private AI Foundation with NVIDIA on vSphere: inventory GPU hosts and devices, see which VMs "
+    "consume a vGPU, read GPU utilization, list and assign vGPU profiles, and list Private AI Service "
+    "(PAIS) served models and knowledge bases."
+)
+
+_TARGET_RULE = (
+    " Choosing a target: every tool that reaches vSphere takes `target`. Choose it from what the user "
+    "asked. A vCenter, the whole environment, a cluster, or GPU capacity across several hosts: a vcenter "
+    "target. One ESXi host the user names: the vcenter target that manages it, because vCenter holds that "
+    "host's GPU devices alongside the VMs consuming them; use the host's own esxi target only when the "
+    "user asks about the host directly or no vCenter manages it. If the request does not say which, and "
+    "targets of different types could answer differently, ask the user which one before querying. A "
+    "result does not name the target it came from, so say in the answer which `target` you passed."
+)
+
+
+def _target_listing(cfg: AppConfig) -> str:
+    """The configured targets as ``name (type, host[, default])`` — or why there are none.
+
+    A config that loads with zero targets is *readable*, just empty: that is a
+    fresh install before ``config.yaml has been written``. It needs a different remedy from a config
+    that could not be read at all, so the two must not collapse into one sentence
+    — and neither may collapse into silence.
+
+    Called from inside the caller's ``try`` on purpose: ``AppConfig.default_target``
+    raises when the target list is empty, so the empty case is answered here before
+    that property is ever asked, and anything unforeseen still lands on the caller's
+    fallback instead of stopping the server.
+    """
+    if not cfg.targets:
+        # The documented default path. ``VMWARE_PRIVATEAI_CONFIG`` can point somewhere else;
+        # ``vmware-privateai doctor`` reports which file it actually resolved, and this
+        # one-line remedy does not try to restate that.
+        return "none yet — add one under `targets:` in ~/.vmware-privateai/config.yaml"
+    default_name = cfg.default_target.name
+    return "; ".join(
+        f"{t.name} ({t.type}, {t.host}{', default' if t.name == default_name else ''})"
+        for t in cfg.targets
+    )
+
+
+def _target_instructions() -> str:
+    """Server instructions that name the configured targets and how to choose one.
+
+    Until this existed the client was never told which targets are configured, so it called every tool
+    with no ``target`` and got whichever one the connection layer defaults to. Monitor shipped that way
+    until 2026-09-15: with a standalone ESXi host first in the file, "how many VMs does the vCenter have"
+    was answered from that host, confidently and wrongly. This skill has the same shape — "how many GPUs
+    are there" read from one ESXi host and read from vCenter are different answers that look identical.
+
+    The listing is built from the loaded config rather than written out as a sentence, so it cannot drift
+    the day the operator edits their file. The default is marked by comparing against ``default_target``,
+    which is what :meth:`ConnectionManager.connect` itself falls back to when ``target`` is omitted — not
+    a guess about which entry comes first.
+
+    Never raises: a missing or broken config must not stop the server from starting. The tools report
+    that error themselves, each with its own remedy.
+    """
+    try:
+        detail = _target_listing(load_config())
+    except Exception as exc:  # noqa: BLE001 — instructions are advisory, startup is not
+        # Say so *under the marker* rather than dropping the listing. Shown no
+        # listing at all, a client cannot tell "this skill has no targets" from
+        # "this skill could not read them", and the first reading is the one that
+        # produces a confident answer about a system nobody chose. Only the
+        # exception's type name is interpolated — its text quotes the config path.
+        detail = f"could not be read ({type(exc).__name__}) — run `vmware-privateai doctor`"
+    return f"{_BASE_INSTRUCTIONS} Configured targets: {detail}.{_TARGET_RULE}"
+
+
+mcp = FastMCP("vmware-privateai", instructions=_target_instructions())
 
 # FastMCP takes no version argument and leaves the lowlevel server's at
 # None, which makes `initialize` answer with the MCP SDK's version rather
