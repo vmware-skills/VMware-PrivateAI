@@ -26,7 +26,7 @@ cannot be read. It never powers a VM off itself.
 
 ## Upgrading to 2.0
 
-2.0 renames 17 MCP tools so every name starts with a verb (e.g. `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`). The full old → new table is in
+2.0 renames all 17 MCP tools so every name starts with a verb (e.g. `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`). The full old → new table is in
 [RELEASE_NOTES.md](RELEASE_NOTES.md#v200--mcp-tools-renamed-verb-first). Nothing else changes: same tools, parameters,
 safety gates and CLI commands. If an agent prompt, script or `~/.vmware/rules.yaml` names a tool, update it — though deny
 rules written with the old names keep working with vmware-policy ≥ 1.18 (`vmware-audit policy` lists any rule the

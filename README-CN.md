@@ -17,7 +17,7 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 
 ## 升级到 2.0
 
-2.0 把 17 个 MCP 工具改成动词在前（例如 `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`），完整的新旧名对照表见
+2.0 把全部 17 个 MCP 工具改成动词在前（例如 `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`），完整的新旧名对照表见
 [RELEASE_NOTES.md](RELEASE_NOTES.md#v200--mcp-tools-renamed-verb-first)。其他都不变：工具、参数、安全确认门和 CLI 命令都一样。
 如果 agent 提示词、脚本或 `~/.vmware/rules.yaml` 里写了工具名，请改成新名——不过用旧名写的 deny 规则在
 vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改名而多匹配的规则），vmware-pilot ≥ 1.13 也会自动转换已保存工作流里的旧名。
