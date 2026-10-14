@@ -111,7 +111,7 @@ vmware-privateai gpu vgpu-assign fin-train-01 grid_a100-4c --dry-run   # preview
 vmware-privateai gpu vgpu-assign fin-train-01 grid_a100-4c             # double-confirm + audit
 ```
 *Failure branch*: if `vgpu-assign` (confirm) refuses with "VM is powered on — a vGPU change needs the
-VM powered off", run `vmware-aiops power_off_vm 'fin-train-01'` first, then re-run. If it fails with
+VM powered off", run vmware-aiops `power_off_vm` (CLI `vmware-aiops vm power-off fin-train-01`) first, then re-run. If it fails with
 "profile not offered by the VM's host / GPU lacks free framebuffer", run
 `vmware-privateai gpu host-get <that VM's host>` to see the valid profiles and free capacity.
 

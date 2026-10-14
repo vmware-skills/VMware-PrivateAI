@@ -66,7 +66,7 @@ vmware-privateai gpu vgpu-assign fin-train-01 grid_a100-4c --dry-run   # 预览
 # 先用 vmware-aiops 关机,再:
 vmware-privateai gpu vgpu-assign fin-train-01 grid_a100-4c            # 双重确认 + 审计
 ```
-*失败分支*:提示 "VM is powered on" 时,先 `vmware-aiops power_off_vm 'fin-train-01'`;提示配置不被主机
+*失败分支*:提示 "VM is powered on" 时,先用 vmware-aiops 的 `power_off_vm`（CLI：`vmware-aiops vm power-off fin-train-01`）关机;提示配置不被主机
 提供 / 显存不足时,`vmware-privateai gpu host-get <该主机>` 查看有效配置。
 
 **2. 全域 GPU 利用率巡检**

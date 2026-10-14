@@ -56,7 +56,7 @@ vmware-privateai gpu vgpu-assign <vm_name> <profile> [--dry-run] [--target T] [-
 **WRITE.** Set a VM's vGPU profile. Always prints the preview (current → target profile, power state,
 requires_power_off) first. `--dry-run` stops there. Otherwise requires **double confirmation**, then
 applies via ReconfigVM and audits the result. The VM must be powered **off** — a running or suspended VM
-is refused with a teaching error routing you to `vmware-aiops power_off_vm`, and so is a name shared by
+is refused with a teaching error routing you to vmware-aiops `power_off_vm` (CLI `vmware-aiops vm power-off`), and so is a name shared by
 several VMs or a VM whose power state or devices could not be read. This command never powers the VM off
 itself.
 

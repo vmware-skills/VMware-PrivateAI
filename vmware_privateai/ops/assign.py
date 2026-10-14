@@ -110,12 +110,12 @@ def blast_radius(row: dict, vm_name: str, profile: str) -> dict:
     if power == "poweredOn":
         blockers.append(
             f"VM '{vm_name}' is powered on — a vGPU change needs the VM powered off (no hot-add). "
-            f"Power it off first (vmware-aiops power_off_vm '{vm_name}'), then preview again."
+            f"Power it off first (vmware-aiops MCP tool power_off_vm, or CLI: vmware-aiops vm power-off '{vm_name}'), then preview again."
         )
     elif power == "suspended":
         blockers.append(
             f"VM '{vm_name}' is suspended: its memory holds a paused workload and its devices "
-            f"cannot change. Power it off first (vmware-aiops power_off_vm '{vm_name}'), then "
+            f"cannot change. Power it off first (vmware-aiops MCP tool power_off_vm, or CLI: vmware-aiops vm power-off '{vm_name}'), then "
             f"preview again."
         )
     if len(same_name) > 1:
