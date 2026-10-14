@@ -10,7 +10,7 @@ Install, credential, and MCP-client configuration for vmware-privateai, plus the
 ## 1. Install
 
 ```bash
-uv tool install vmware-privateai==1.4.0       # isolated tool env; puts vmware-privateai on PATH
+uv tool install vmware-privateai==2.0.0       # isolated tool env; puts vmware-privateai on PATH
 vmware-privateai version
 ```
 
@@ -91,7 +91,7 @@ Fallback (`uvx` — re-resolves from PyPI each start; if your network runs a TLS
   "mcpServers": {
     "vmware-privateai": {
       "command": "uvx",
-      "args": ["--from", "vmware-privateai==1.4.0", "vmware-privateai-mcp"],
+      "args": ["--from", "vmware-privateai==2.0.0", "vmware-privateai-mcp"],
       "env": { "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml" }
     }
   }
@@ -129,7 +129,7 @@ endpoint/token) — follow the message.
    surface here) passes through `vmware_policy.sanitize()` (≤500-char truncation + C0/C1 control-char
    stripping) before it reaches the model.
 6. **Least Privilege** — read-vs-write authorization is delegated to the vCenter service account's RBAC
-   role: a read-only account refuses `vgpu_assign`'s ReconfigVM at vCenter, un-bypassably (the one place
+   role: a read-only account refuses `assign_vgpu`'s ReconfigVM at vCenter, un-bypassably (the one place
    the control cannot be stepped around by a shell). Recommend a dedicated service account scoped to the
    GPU clusters. All writes are recorded to `~/.vmware/audit.db` (and the CLI companion
    `~/.vmware-privateai/audit.log`).

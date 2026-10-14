@@ -1,6 +1,6 @@
 """Private AI Service (PAIS) MCP tools (2 read) — served models and knowledge bases.
 
-pais_model_list, pais_knowledge_base_list [READ]. These talk to the PAIS REST endpoint
+list_pais_models, list_pais_knowledge_bases [READ]. These talk to the PAIS REST endpoint
 (separate from the vCenter connection), authenticated with the OIDC bearer token in
 VMWARE_PRIVATEAI_PAIS_TOKEN. Signatures use ``Optional[X]`` (not PEP 604) — 踩坑 #33.
 """
@@ -18,7 +18,7 @@ _READ = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True,
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def pais_model_list(
+def list_pais_models(
     name: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
@@ -41,12 +41,12 @@ def pais_model_list(
         with PaisClient.from_config() as client:
             return list_models(client, name=name, limit=limit, offset=offset)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "pais_model_list")}
+        return {"error": _safe_error(exc, "list_pais_models")}
 
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def pais_knowledge_base_list(
+def list_pais_knowledge_bases(
     name: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
@@ -54,7 +54,7 @@ def pais_knowledge_base_list(
     """[READ] List Private AI Service knowledge bases (RAG vector stores).
 
     Each item has id, name, status, description. Same PAIS endpoint + bearer token as
-    pais_model_list. Paginated envelope; an empty items with truncated=false means the
+    list_pais_models. Paginated envelope; an empty items with truncated=false means the
     endpoint has no knowledge bases (checked-and-none), not a failure.
 
     Args:
@@ -69,12 +69,12 @@ def pais_knowledge_base_list(
         with PaisClient.from_config() as client:
             return list_knowledge_bases(client, name=name, limit=limit, offset=offset)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "pais_knowledge_base_list")}
+        return {"error": _safe_error(exc, "list_pais_knowledge_bases")}
 
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def pais_model_catalog(
+def get_pais_model_catalog(
     name: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
@@ -82,7 +82,7 @@ def pais_model_catalog(
     """[READ] List the PAIS model CATALOG — models available/approved to deploy (not the served set).
 
     Answers "which models are approved / what can I install in-house" (the air-gapped model
-    question). Each item has id, name, status, source. Distinct from pais_model_list (which lists
+    question). Each item has id, name, status, source. Distinct from list_pais_models (which lists
     what is already SERVED). Path is INFERRED — a 404 returns a base-URL teaching message, not a
     bug. Needs the PAIS endpoint + VMWARE_PRIVATEAI_PAIS_TOKEN.
 
@@ -98,19 +98,19 @@ def pais_model_catalog(
         with PaisClient.from_config() as client:
             return list_model_catalog(client, name=name, limit=limit, offset=offset)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "pais_model_catalog")}
+        return {"error": _safe_error(exc, "get_pais_model_catalog")}
 
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def pais_data_source_list(
+def list_pais_data_sources(
     name: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
 ) -> dict:
     """[READ] List PAIS RAG data sources (ingest connectors that feed knowledge bases).
 
-    Each item has id, name, type, status. Pair with pais_knowledge_base_list to see the RAG
+    Each item has id, name, type, status. Pair with list_pais_knowledge_bases to see the RAG
     pipeline. Path is INFERRED — a 404 prompts a base-URL check, not a bug. Needs the PAIS
     endpoint + VMWARE_PRIVATEAI_PAIS_TOKEN.
 
@@ -126,12 +126,12 @@ def pais_data_source_list(
         with PaisClient.from_config() as client:
             return list_data_sources(client, name=name, limit=limit, offset=offset)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "pais_data_source_list")}
+        return {"error": _safe_error(exc, "list_pais_data_sources")}
 
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def pais_monitoring_summary(
+def get_pais_monitoring_summary(
     hot_pct: float = 90.0,
     top: int = 5,
     target: Optional[str] = None,
@@ -150,8 +150,8 @@ def pais_monitoring_summary(
         target: vCenter/ESXi target from config.yaml; omit to use the default.
     """
     try:
-        from vmware_privateai.ops.monitoring import pais_monitoring_summary as _summary
+        from vmware_privateai.ops.monitoring import pais_monitoring_summary as _ops_pais_monitoring_summary
 
-        return _summary(_get_connection(target), hot_pct=hot_pct, top=top)
+        return _ops_pais_monitoring_summary(_get_connection(target), hot_pct=hot_pct, top=top)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "pais_monitoring_summary")}
+        return {"error": _safe_error(exc, "get_pais_monitoring_summary")}

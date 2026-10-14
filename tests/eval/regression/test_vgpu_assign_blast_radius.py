@@ -1,4 +1,4 @@
-"""vgpu_assign states its blast radius and refuses to act blind (HLD §7, revised 2026-09-16).
+"""assign_vgpu states its blast radius and refuses to act blind (HLD §7, revised 2026-09-16).
 
 The tool already previewed on a bare call (L2) and refused a powered-on VM. What it did not do:
 
@@ -31,7 +31,7 @@ from vmware_policy.undo import reset_undo_store
 
 import vmware_privateai.mcp_server.tools.gpu as gpu_tools
 from vmware_privateai.mcp_server.server import mcp
-from vmware_privateai.mcp_server.tools.gpu import vgpu_assign
+from vmware_privateai.mcp_server.tools.gpu import assign_vgpu
 from vmware_privateai.ops import assign
 
 
@@ -105,7 +105,7 @@ def _refused(out, rows, *words):
 
 
 def _tool():
-    return next(t for t in asyncio.run(mcp.list_tools()) if t.name == "vgpu_assign")
+    return next(t for t in asyncio.run(mcp.list_tools()) if t.name == "assign_vgpu")
 
 
 def test_schema_defaults_confirm_to_false():
@@ -123,14 +123,14 @@ def test_description_states_the_consequence_not_an_invitation():
 
 
 def test_a_bare_call_previews_and_reconfigures_nothing(inventory):
-    out = vgpu_assign(vm_name="train-01", profile="grid_a100-4c")
+    out = assign_vgpu(vm_name="train-01", profile="grid_a100-4c")
     assert out["action"] == "preview" and out["applied"] is False
     assert _vm(inventory).reconfigured_with == []
 
 
 def test_preview_carries_the_measured_blast_radius(inventory):
     inventory[0]["config.hardware.device"] = [_vgpu("grid_a100-2c"), _directpath()]
-    out = vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=False)
+    out = assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=False)
     radius = out["blast_radius"]
     assert radius["vm"] == "train-01" and radius["vm_id"] == "vm-42"
     assert radius["current_profile"] == "grid_a100-2c" and radius["target_profile"] == "grid_a100-4c"
@@ -147,12 +147,12 @@ def test_preview_carries_the_measured_blast_radius(inventory):
 
 def test_a_vm_without_a_vgpu_is_an_add(inventory):
     inventory[0]["config.hardware.device"] = []
-    radius = vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=False)["blast_radius"]
+    radius = assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=False)["blast_radius"]
     assert radius["device_change"] == "add" and radius["current_profile"] is None
 
 
 def test_confirm_applies_once_and_states_the_blast_radius(inventory):
-    out = vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=True)
+    out = assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=True)
     assert out["action"] == "applied" and out["applied"] is True
     assert out["blast_radius"]["vm_id"] == "vm-42"
     assert len(_vm(inventory).reconfigured_with) == 1
@@ -163,23 +163,23 @@ def test_confirm_applies_once_and_states_the_blast_radius(inventory):
 
 def test_a_powered_on_vm_is_a_blocker_and_refused(inventory):
     inventory[0]["runtime.powerState"] = "poweredOn"
-    preview = vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=False)
+    preview = assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=False)
     assert preview["blast_radius"]["blockers"], "the preview must say it will be refused"
-    _refused(vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=True), inventory,
+    _refused(assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=True), inventory,
              "powered on", "vmware-aiops")
 
 
 def test_a_suspended_vm_is_refused(inventory):
     inventory[0]["runtime.powerState"] = "suspended"
-    _refused(vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=True), inventory,
-             "suspended", "vm_power_off")
+    _refused(assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=True), inventory,
+             "suspended", "power_off_vm")
 
 
 def test_two_vms_with_the_same_name_are_refused(inventory):
     inventory.append(_row(moid="vm-99"))
-    preview = vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=False)
+    preview = assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=False)
     assert preview["blast_radius"]["same_name_vm_ids"] == ["vm-42", "vm-99"]
-    _refused(vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=True), inventory,
+    _refused(assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=True), inventory,
              "2 VMs are named", "Rename")
 
 
@@ -188,30 +188,30 @@ def test_two_vms_with_the_same_name_are_refused(inventory):
 
 def test_an_unreadable_power_state_is_refused(inventory):
     inventory[0].pop("runtime.powerState")
-    preview = vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=False)
+    preview = assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=False)
     assert preview["blast_radius"]["unmeasured"] == ["power state"]
-    _refused(vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=True), inventory,
+    _refused(assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=True), inventory,
              "power state", "Nothing was changed")
 
 
 def test_an_unreadable_device_list_is_refused_not_read_as_no_vgpu(inventory):
     inventory[0].pop("config.hardware.device")
-    preview = vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=False)
+    preview = assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=False)
     radius = preview["blast_radius"]
     assert radius["unmeasured"] == ["virtual devices"]
     assert radius["device_change"] is None, "unknown devices must not be reported as an add"
-    _refused(vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=True), inventory,
+    _refused(assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=True), inventory,
              "virtual devices")
 
 
 def test_a_refusal_is_audited_as_a_failure(inventory):
     inventory[0]["runtime.powerState"] = "poweredOn"
-    out = vgpu_assign(vm_name="train-01", profile="grid_a100-4c", confirm=True)
+    out = assign_vgpu(vm_name="train-01", profile="grid_a100-4c", confirm=True)
     assert "error" in out
     db = Path(get_engine()._path)
     with sqlite3.connect(f"file:{db}?mode=ro", uri=True) as con:
         status, result = con.execute(
-            "SELECT status, result FROM audit_log WHERE tool = 'vgpu_assign' ORDER BY id DESC LIMIT 1"
+            "SELECT status, result FROM audit_log WHERE tool = 'assign_vgpu' ORDER BY id DESC LIMIT 1"
         ).fetchone()
     assert status == "error", f"the refused call was audited as {status!r}"
     assert "powered on" in result

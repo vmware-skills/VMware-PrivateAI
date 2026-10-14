@@ -1,7 +1,7 @@
 """PAIS GPU monitoring rollup (read) — a fleet-level GPU health summary for VCF Ops dashboards.
 
 Field ask (Shivani Manro, VCF PAIS): "how do I monitor PAIS in VCF Operations 9.1 — dashboards,
-key metrics, alerts?". This op aggregates the per-VM vGPU counters (which gpu_utilization already
+key metrics, alerts?". This op aggregates the per-VM vGPU counters (which get_gpu_utilization already
 reads from VERIFIED vSphere perf counters) into a single estate rollup: how many vGPU VMs, how
 many are actually reporting, average/peak GPU + memory utilisation, hottest GPU, idle vs. hot
 VMs, and the busiest N. It is the data an operator would pin to a dashboard or alert on.
@@ -82,7 +82,7 @@ def pais_monitoring_summary(si: Any, *, hot_pct: float = _HOT_PCT, top: int = 5)
         "scope_note": _DCGM_NOTE,
         "hint": (
             "No vGPU VM is reporting GPU counters — confirm the NVIDIA host driver is installed "
-            "(gpu_host_readiness) and VMs are powered on."
+            "(check_gpu_host_readiness) and VMs are powered on."
             if vms and not reporting
             else ""
         ),

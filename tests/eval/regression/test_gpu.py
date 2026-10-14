@@ -127,7 +127,7 @@ def test_get_gpu_host_bad_name_raises_teaching_error(monkeypatch):
     with pytest.raises(GpuNotFoundError) as ei:
         gpu.get_gpu_host(None, "esx-typo")
     msg = str(ei.value)
-    assert "esx-typo" in msg and "gpu_host_list" in msg and "esx-gpu" in msg  # names the fix + lists real hosts
+    assert "esx-typo" in msg and "list_gpu_hosts" in msg and "esx-gpu" in msg  # names the fix + lists real hosts
 
 
 # --- gpu consumers (vGPU backing) ----------------------------------------------

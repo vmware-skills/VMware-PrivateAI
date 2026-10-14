@@ -24,12 +24,12 @@ file public issues for security reports.
 
 ### Authorization — delegated to vCenter RBAC
 The skill ships full read + one write and does not gate read-vs-write itself. Point a target at a
-read-only vCenter service account and the single write (`vgpu_assign`'s `ReconfigVM_Task`) is refused at
+read-only vCenter service account and the single write (`assign_vgpu`'s `ReconfigVM_Task`) is refused at
 vCenter, un-bypassably — the one place the control cannot be stepped around by a shell. Recommend a
 dedicated service account scoped to the GPU clusters.
 
-### `vgpu_assign` write safety
-`vgpu_assign` is the only state-changing tool. Its safety model:
+### `assign_vgpu` write safety
+`assign_vgpu` is the only state-changing tool. Its safety model:
 - **Power-off gate.** A vGPU change requires the VM to be powered **off** (no hot-add, no vMotion for
   passthrough — VERIFIED). `confirm=false` (the default) returns `blast_radius` — VM name and id,
   current and target profile, edit-or-add, power state, `blockers`, `unmeasured` — and changes nothing.
@@ -38,7 +38,7 @@ dedicated service account scoped to the GPU clusters.
   list is never taken as "no vGPU", which would add a second device).
 - **Never powers the VM off itself.** Powering the VM off is `vmware-aiops`'s job, kept separate so this
   tool's blast radius stays "one VM, when it is already off". The refusal routes the operator to
-  `vmware-aiops vm_power_off`.
+  `vmware-aiops power_off_vm`.
 - **Edits only the existing vGPU device.** The reconfigure targets the VM's existing vGPU device
   (selected by the same `backing.vgpu` predicate the preview uses), never a plain DirectPath / SR-IOV
   `VirtualPCIPassthrough`, so it cannot silently convert a full-GPU passthrough into a vGPU device.

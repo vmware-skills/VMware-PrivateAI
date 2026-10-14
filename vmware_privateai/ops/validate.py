@@ -1,10 +1,10 @@
-"""vGPU profile-change validation (read) — the pre-flight for vgpu_assign.
+"""vGPU profile-change validation (read) — the pre-flight for assign_vgpu.
 
 The most-escalated vGPU field case is "customer is trying to change the GPU profile on a VM"
 (SR 36933109). Changing a vGPU profile fails at ReconfigVM time for two avoidable reasons: the
 VM is powered on, or the VM's host does not actually offer the requested profile. This op checks
 BOTH up front — read-only, no reconfigure — so the operator sees exactly what would block the
-change before touching the (write, high-risk) vgpu_assign tool.
+change before touching the (write, high-risk) assign_vgpu tool.
 
 All facts come from VERIFIED pyVmomi paths already used by the assign/profile ops:
 VM power state + current vGPU backing, and the VM host's QueryConfigTarget profile catalog.
@@ -40,7 +40,7 @@ def _find_vm_with_host(si: Any, vm_name: str) -> dict:
             return r
     known = sorted(r.get("name", "") for r in rows)[:10]
     hint = f" Known VMs: {', '.join(known)}." if known else ""
-    raise GpuNotFoundError(f"VM '{vm_name}' not found on this target.{hint} Run gpu_consumer_list to see vGPU VMs.")
+    raise GpuNotFoundError(f"VM '{vm_name}' not found on this target.{hint} Run list_gpu_consumers to see vGPU VMs.")
 
 
 def validate_vgpu_change(si: Any, vm_name: str, target_profile: str) -> dict:
@@ -48,13 +48,13 @@ def validate_vgpu_change(si: Any, vm_name: str, target_profile: str) -> dict:
 
     Returns a read-only verdict: ``can_apply`` plus ``blocking_reasons``, the current→target
     profiles, the VM power state, and whether the VM's host offers the target profile (with its
-    framebuffer). Does NOT reconfigure anything — once ``can_apply`` is true, vgpu_assign
+    framebuffer). Does NOT reconfigure anything — once ``can_apply`` is true, assign_vgpu
     previews the change; it applies with confirm=true only after the user agrees.
     """
     if not target_profile:
         raise GpuNotFoundError(
-            "A target vGPU profile is required (e.g. 'nvidia_a100-4c'). Run gpu_host_get or "
-            "vgpu_profile_list to see the profiles a host offers."
+            "A target vGPU profile is required (e.g. 'nvidia_a100-4c'). Run get_gpu_host or "
+            "list_vgpu_profiles to see the profiles a host offers."
         )
 
     row = _find_vm_with_host(si, vm_name)
@@ -109,9 +109,9 @@ def validate_vgpu_change(si: Any, vm_name: str, target_profile: str) -> dict:
         "can_apply": can_apply,
         "blocking_reasons": reasons,
         "hint": (
-            f"Ready — call vgpu_assign('{vm_name}', '{target_profile}') without confirm to see its "
+            f"Ready — call assign_vgpu('{vm_name}', '{target_profile}') without confirm to see its "
             f"blast_radius, show it to the user, and apply with confirm=true only after they agree."
             if can_apply
-            else "Resolve blocking_reasons, then re-validate before vgpu_assign."
+            else "Resolve blocking_reasons, then re-validate before assign_vgpu."
         ),
     }

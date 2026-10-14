@@ -20,7 +20,7 @@ vgpu_app = typer.Typer(help="vGPU / DirectPath profile catalog: what profiles a 
 
 @vgpu_app.command("profile-list")
 @cli_errors
-@audited("vgpu_profile_list")
+@audited("list_vgpu_profiles")
 def vgpu_profile_list_cmd(
     host: Annotated[str, typer.Option("--host", help="Filter/scope by host name (substring)")] = "",
     model: Annotated[str, typer.Option("--model", help="Filter by profile/model name (substring)")] = "",
@@ -44,7 +44,7 @@ def vgpu_profile_list_cmd(
 
 @vgpu_app.command("directpath-list")
 @cli_errors
-@audited("directpath_profile_list")
+@audited("list_directpath_profiles")
 def directpath_list_cmd(
     name: Annotated[str, typer.Option("--name", help="Filter by profile name (substring)")] = "",
     vendor: Annotated[str, typer.Option("--vendor", help="Filter by vendor (substring)")] = "",
@@ -64,7 +64,7 @@ def directpath_list_cmd(
 
 @vgpu_app.command("validate")
 @cli_errors
-@audited("vgpu_profile_validate")
+@audited("validate_vgpu_profile")
 def vgpu_profile_validate_cmd(
     vm_name: Annotated[str, typer.Argument(help="VM whose vGPU profile would change")],
     target_profile: Annotated[str, typer.Argument(help="Target vGPU profile (e.g. nvidia_a100-8c)")],

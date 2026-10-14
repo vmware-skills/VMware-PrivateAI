@@ -101,7 +101,7 @@ def test_project_without_metrics_is_unavailable_not_crash():
     assert out["metrics_available"] is False and out["idle"] is False and out["gpu_pct"] is None
 
 
-# --- gpu_utilization ranking ----------------------------------------------------
+# --- get_gpu_utilization ranking ----------------------------------------------------
 
 def _patch(monkeypatch, rows, metrics):
     monkeypatch.setattr(util, "_gpu_vm_rows", lambda si: rows)

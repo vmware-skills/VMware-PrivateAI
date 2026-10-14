@@ -133,7 +133,7 @@ def get_gpu_host(si: Any, host_name: str) -> dict:
     hint = f" Hosts with GPUs: {', '.join(available[:10])}." if available else ""
     raise GpuNotFoundError(
         f"Host '{host_name}' not found (or has no GPU) on this target.{hint} "
-        f"Run gpu_host_list to see hosts with GPUs."
+        f"Run list_gpu_hosts to see hosts with GPUs."
     )
 
 

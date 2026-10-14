@@ -55,7 +55,7 @@ def _patch_vm(monkeypatch, *, power="poweredOff", devices=None, obj=None):
 
 
 def _raise_notfound(name):
-    raise GpuNotFoundError(f"VM '{name}' not found on this target. Run gpu_consumer_list to see vGPU VMs.")
+    raise GpuNotFoundError(f"VM '{name}' not found on this target. Run list_gpu_consumers to see vGPU VMs.")
 
 
 # --- spec-gate ------------------------------------------------------------------
@@ -134,7 +134,7 @@ def test_apply_reports_and_audits_the_real_task_failure(monkeypatch):
     audit = SimpleNamespace(record=lambda **kw: recorded.update(kw))
     with pytest.raises(PrivateAiError) as ei:
         assign.assign_vgpu(None, "train-01", "grid_a100-4c", confirm=True, audit_logger=audit, target_name="prod")
-    assert "failed" in str(ei.value) and "gpu_host_get" in str(ei.value)
+    assert "failed" in str(ei.value) and "get_gpu_host" in str(ei.value)
     assert recorded["result"] == "error"  # audited as a failure, not "ok"
 
 

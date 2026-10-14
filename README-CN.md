@@ -29,13 +29,13 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 | **PAIS 监控** | 集群 GPU 汇总(利用率/显存/温度、热点/空闲、最忙) | 1 读 |
 | **选型与 air-gap** | LLM GPU/存储选型顾问、本地 pais.yml 镜像清单 | 2 读 |
 
-读操作严格无破坏性。唯一的写(`vgpu_assign`)会预览爆炸半径、拒绝已开机虚机、**绝不自行关机**、
-CLI 双重确认、统一审计到 `~/.vmware/audit.db`;可先用 `vgpu_profile_validate` 预检。
-`vgpu_assign` 的 `confirm` 默认 `false`:不带它调用时返回 `blast_radius` —— 虚机名称与 id、当前与目标配置、
+读操作严格无破坏性。唯一的写(`assign_vgpu`)会预览爆炸半径、拒绝已开机虚机、**绝不自行关机**、
+CLI 双重确认、统一审计到 `~/.vmware/audit.db`;可先用 `validate_vgpu_profile` 预检。
+`assign_vgpu` 的 `confirm` 默认 `false`:不带它调用时返回 `blast_radius` —— 虚机名称与 id、当前与目标配置、
 是修改已有 vGPU 设备还是新增一个、电源状态、`blockers` 与 `unmeasured` —— 不做任何改动。已开机或挂起的虚机、
 多台虚机同名、电源状态或设备列表读不到时,`confirm=true` 会被拒绝。它绝不会自行给虚机关机。
-`pais_model_catalog` / `pais_data_source_list` 走未确认的 PAIS 控制面路径(踩坑 #36:404 返回 base-URL
-教学提示,不当 bug);`pais_sizing_advise` / `pais_bundle_verify` 无需连接(纯计算 / 本地文件解析)。
+`get_pais_model_catalog` / `list_pais_data_sources` 走未确认的 PAIS 控制面路径(踩坑 #36:404 返回 base-URL
+教学提示,不当 bug);`advise_pais_sizing` / `verify_pais_bundle` 无需连接(纯计算 / 本地文件解析)。
 
 ## 快速开始
 
@@ -59,7 +59,7 @@ vmware-privateai gpu vgpu-assign fin-train-01 grid_a100-4c --dry-run   # 预览
 # 先用 vmware-aiops 关机,再:
 vmware-privateai gpu vgpu-assign fin-train-01 grid_a100-4c            # 双重确认 + 审计
 ```
-*失败分支*:提示 "VM is powered on" 时,先 `vmware-aiops vm_power_off 'fin-train-01'`;提示配置不被主机
+*失败分支*:提示 "VM is powered on" 时,先 `vmware-aiops power_off_vm 'fin-train-01'`;提示配置不被主机
 提供 / 显存不足时,`vmware-privateai gpu host-get <该主机>` 查看有效配置。
 
 **2. 全域 GPU 利用率巡检**
@@ -85,7 +85,7 @@ HTTP 401/403 表示 `VMWARE_PRIVATEAI_PAIS_TOKEN` 过期或缺权限,重新取 t
 ## 安全
 详见仓库根目录 `SECURITY.md`。要点:凭据仅存 `.env`(chmod 600、`b64:` 混淆);默认开启 TLS 校验;
 所有 vSphere/PAIS 文本经 `vmware_policy.sanitize()` 防注入;读写授权交由 vCenter RBAC;
-`vgpu_assign` 关机门控 + 双重确认 + 审计。
+`assign_vgpu` 关机门控 + 双重确认 + 审计。
 
 ## License
 MIT

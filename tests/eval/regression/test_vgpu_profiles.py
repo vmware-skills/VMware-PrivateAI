@@ -158,7 +158,7 @@ def test_list_directpath_profiles_missing_manager_raises_teaching_error(monkeypa
     with pytest.raises(GpuNotFoundError) as ei:
         vp.list_directpath_profiles(None)
     msg = str(ei.value)
-    assert "9.0" in msg and "vgpu_profile_list" in msg
+    assert "9.0" in msg and "list_vgpu_profiles" in msg
 
 
 def test_list_directpath_profiles_empty_is_checked_and_none(monkeypatch):

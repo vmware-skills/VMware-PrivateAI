@@ -18,7 +18,7 @@ and **vmware-monitor** (read-only health). This skill is the GPU lens over all t
 Every API path is verified against official Broadcom/NVIDIA docs before use (see
 `tests/eval/spec/privateai_endpoints.py`) — no endpoints written from memory.
 
-The one write, `vgpu_assign`, takes `confirm` (default `false`). Without it the call returns
+The one write, `assign_vgpu`, takes `confirm` (default `false`). Without it the call returns
 `blast_radius` — the VM's name and id, current and target profile, whether its vGPU device is edited or a
 new one added, power state, `blockers` and `unmeasured` — and changes nothing. `confirm=true` is refused
 for a powered-on or suspended VM, a name shared by several VMs, and a VM whose power state or devices

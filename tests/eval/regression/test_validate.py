@@ -1,4 +1,4 @@
-"""Regression tests for vgpu_profile_validate (read-only vGPU-change pre-flight).
+"""Regression tests for validate_vgpu_profile (read-only vGPU-change pre-flight).
 
 Covers the two ReconfigVM failure modes it exists to catch up front — VM powered on, and the
 host not offering the target profile — plus the happy path, the bad-VM teaching error, and the
@@ -94,7 +94,7 @@ def test_bad_vm_name_raises_teaching_error(monkeypatch):
     monkeypatch.setattr(validate, "_retrieve_props", lambda content, obj_type, paths: [_vm_row()])
     with pytest.raises(GpuNotFoundError) as ei:
         validate.validate_vgpu_change(None, "typo-vm", "nvidia_a100-4c")
-    assert "typo-vm" in str(ei.value) and "gpu_consumer_list" in str(ei.value)
+    assert "typo-vm" in str(ei.value) and "list_gpu_consumers" in str(ei.value)
 
 
 def test_empty_target_profile_raises_teaching_error(monkeypatch):

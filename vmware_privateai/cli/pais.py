@@ -28,7 +28,7 @@ def _client(config: str | None):
 
 @pais_app.command("model-list")
 @cli_errors
-@audited("pais_model_list")
+@audited("list_pais_models")
 def pais_model_list_cmd(
     name: Annotated[str, typer.Option("--name", help="Filter by model id (substring)")] = "",
     config: ConfigOption = None,
@@ -47,7 +47,7 @@ def pais_model_list_cmd(
 
 @pais_app.command("kb-list")
 @cli_errors
-@audited("pais_knowledge_base_list")
+@audited("list_pais_knowledge_bases")
 def pais_kb_list_cmd(
     name: Annotated[str, typer.Option("--name", help="Filter by KB name/id (substring)")] = "",
     config: ConfigOption = None,
@@ -66,7 +66,7 @@ def pais_kb_list_cmd(
 
 @pais_app.command("model-catalog")
 @cli_errors
-@audited("pais_model_catalog")
+@audited("get_pais_model_catalog")
 def pais_model_catalog_cmd(
     name: Annotated[str, typer.Option("--name", help="Filter by model id/name (substring)")] = "",
     config: ConfigOption = None,
@@ -85,7 +85,7 @@ def pais_model_catalog_cmd(
 
 @pais_app.command("data-source-list")
 @cli_errors
-@audited("pais_data_source_list")
+@audited("list_pais_data_sources")
 def pais_data_source_list_cmd(
     name: Annotated[str, typer.Option("--name", help="Filter by data-source name/id (substring)")] = "",
     config: ConfigOption = None,
@@ -104,7 +104,7 @@ def pais_data_source_list_cmd(
 
 @pais_app.command("monitoring-summary")
 @cli_errors
-@audited("pais_monitoring_summary")
+@audited("get_pais_monitoring_summary")
 def pais_monitoring_summary_cmd(
     hot_pct: Annotated[float, typer.Option("--hot-pct", help="gpu_pct at/above which a VM is 'hot'")] = 90.0,
     top: Annotated[int, typer.Option("--top", help="How many busiest VMs to show")] = 5,

@@ -1,4 +1,4 @@
-"""Regression tests for pais_monitoring_summary (GPU rollup over verified perf counters).
+"""Regression tests for get_pais_monitoring_summary (GPU rollup over verified perf counters).
 
 Covers the aggregation math (counts, avg/max, hot/idle), the busiest list, per-profile tally,
 the non-reporting-driver case (踩坑 形态 #1: vGPU VMs but zero counters = checked-and-none),

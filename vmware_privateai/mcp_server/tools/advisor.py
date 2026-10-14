@@ -1,6 +1,6 @@
 """Advisor MCP tools (2 read) — planning helpers that need NO vCenter / PAIS connection.
 
-pais_sizing_advise (LLM GPU/storage sizing from a parameter count) and pais_bundle_verify (parse
+advise_pais_sizing (LLM GPU/storage sizing from a parameter count) and verify_pais_bundle (parse
 a LOCAL pais.yml for air-gap image mirroring). Both are pure/local — no network — so they answer
 design-time questions before anything is deployed. Signatures use ``Optional[X]`` (not PEP 604)
 because FastMCP/Pydantic reflect them at import time (踩坑 #33).
@@ -19,7 +19,7 @@ _READ = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True,
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def pais_sizing_advise(
+def advise_pais_sizing(
     model: Optional[str] = None,
     model_billions: Optional[float] = None,
     precision: str = "fp16",
@@ -44,12 +44,12 @@ def pais_sizing_advise(
 
         return advise_sizing(model=model, model_billions=model_billions, precision=precision, kv_overhead=kv_overhead)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "pais_sizing_advise")}
+        return {"error": _safe_error(exc, "advise_pais_sizing")}
 
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def pais_bundle_verify(manifest_path: str) -> dict:
+def verify_pais_bundle(manifest_path: str) -> dict:
     """[READ] Parse a LOCAL pais.yml / bundle manifest and list the images to mirror for air-gap.
 
     Reads the file you point it at (no network, no registry pull), enumerates every container image
@@ -66,4 +66,4 @@ def pais_bundle_verify(manifest_path: str) -> dict:
 
         return inspect_bundle(manifest_path)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "pais_bundle_verify")}
+        return {"error": _safe_error(exc, "verify_pais_bundle")}

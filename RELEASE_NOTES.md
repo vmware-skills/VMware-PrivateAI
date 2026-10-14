@@ -1,3 +1,40 @@
+## v2.0.0 — MCP tools renamed verb-first
+
+**Breaking for MCP clients: every tool has a new name.** The family now follows one convention — the verb
+comes first (`list_`, `get_`, `check_`, `verify_`, `advise_`, `validate_`, `assign_`), with a domain word
+kept where two skills would otherwise collide (`list_pais_models`, `get_gpu_utilization`). Before this, each
+skill named its tools its own way (`gpu_host_list` here, `vm_list_snapshots` elsewhere), so an agent working
+across skills had to guess the shape of every name.
+
+| Old name | New name |
+|---|---|
+| `directpath_profile_list` | `list_directpath_profiles` |
+| `gpu_consumer_list` | `list_gpu_consumers` |
+| `gpu_device_list` | `list_gpu_devices` |
+| `gpu_host_get` | `get_gpu_host` |
+| `gpu_host_list` | `list_gpu_hosts` |
+| `gpu_host_readiness` | `check_gpu_host_readiness` |
+| `gpu_utilization` | `get_gpu_utilization` |
+| `pais_bundle_verify` | `verify_pais_bundle` |
+| `pais_data_source_list` | `list_pais_data_sources` |
+| `pais_knowledge_base_list` | `list_pais_knowledge_bases` |
+| `pais_model_catalog` | `get_pais_model_catalog` |
+| `pais_model_list` | `list_pais_models` |
+| `pais_monitoring_summary` | `get_pais_monitoring_summary` |
+| `pais_sizing_advise` | `advise_pais_sizing` |
+| `vgpu_assign` | `assign_vgpu` |
+| `vgpu_profile_list` | `list_vgpu_profiles` |
+| `vgpu_profile_validate` | `validate_vgpu_profile` |
+
+Parameters, annotations, results and behaviour are unchanged. `assign_vgpu` keeps its HLD §7 confirm gate
+exactly as before: a bare call returns `blast_radius` and changes nothing; `confirm=True` applies it.
+
+**CLI commands are unchanged.** The CLI now records its MCP twin under the new name in `~/.vmware/audit.db`
+(e.g. `gpu vgpu-assign` is audited and authorised as `assign_vgpu`).
+
+Deny rules in `~/.vmware/rules.yaml` written with old names keep working with vmware-policy ≥ 1.18.0 (it
+matches both names); `vmware-audit policy` lists any rule that now matches more.
+
 ## v1.4.0 — the MCP instructions name the configured targets
 
 `initialize` hands the client this server's `instructions`, and for a skill whose every tool takes a target that

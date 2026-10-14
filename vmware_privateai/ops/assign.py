@@ -45,7 +45,7 @@ def _find_vm(si: Any, vm_name: str) -> dict:
     known = sorted(r.get("name", "") for r in rows)[:10]
     hint = f" Known VMs: {', '.join(known)}." if known else ""
     raise GpuNotFoundError(
-        f"VM '{vm_name}' not found on this target.{hint} Run gpu_consumer_list to see vGPU VMs."
+        f"VM '{vm_name}' not found on this target.{hint} Run list_gpu_consumers to see vGPU VMs."
     )
 
 
@@ -93,7 +93,7 @@ class VgpuAssignRefusedError(PrivateAiError):
 
 
 def blast_radius(row: dict, vm_name: str, profile: str) -> dict:
-    """L1 for vgpu_assign: which VM, how its devices change, and what stands in the way.
+    """L1 for assign_vgpu: which VM, how its devices change, and what stands in the way.
 
     ``devices`` is read as unmeasured when the property is absent, never as "no
     devices": a VM always has devices, and reading a failed read as an empty list
@@ -110,12 +110,12 @@ def blast_radius(row: dict, vm_name: str, profile: str) -> dict:
     if power == "poweredOn":
         blockers.append(
             f"VM '{vm_name}' is powered on — a vGPU change needs the VM powered off (no hot-add). "
-            f"Power it off first (vmware-aiops vm_power_off '{vm_name}'), then preview again."
+            f"Power it off first (vmware-aiops power_off_vm '{vm_name}'), then preview again."
         )
     elif power == "suspended":
         blockers.append(
             f"VM '{vm_name}' is suspended: its memory holds a paused workload and its devices "
-            f"cannot change. Power it off first (vmware-aiops vm_power_off '{vm_name}'), then "
+            f"cannot change. Power it off first (vmware-aiops power_off_vm '{vm_name}'), then "
             f"preview again."
         )
     if len(same_name) > 1:
@@ -149,7 +149,7 @@ def _refuse(radius: dict, vm_name: str) -> None:
         raise VgpuAssignRefusedError(" ".join(radius["blockers"]) + " Nothing was changed.")
     if radius["unmeasured"]:
         raise VgpuAssignRefusedError(
-            f"vgpu_assign refused for '{vm_name}': could not read {', '.join(radius['unmeasured'])}, "
+            f"assign_vgpu refused for '{vm_name}': could not read {', '.join(radius['unmeasured'])}, "
             f"so how the VM would change is unknown. Nothing was changed. Check the VM in vCenter "
             f"(permissions, inaccessible or orphaned state) and preview again."
         )
@@ -174,7 +174,7 @@ def assign_vgpu(
     """
     if not profile:
         raise PrivateAiError(
-            "A target vGPU profile is required (e.g. 'grid_a100-4c'). Run gpu_host_get to see profiles."
+            "A target vGPU profile is required (e.g. 'grid_a100-4c'). Run get_gpu_host to see profiles."
         )
 
     row = _find_vm(si, vm_name)
@@ -213,7 +213,7 @@ def assign_vgpu(
         raise PrivateAiError(
             f"vGPU assignment failed for '{vm_name}': {type(exc).__name__}. The profile "
             f"'{profile}' may not be offered by the VM's host or the GPU lacks free framebuffer — "
-            f"run gpu_host_get on the VM's host to see valid profiles."
+            f"run get_gpu_host on the VM's host to see valid profiles."
         ) from exc
     if audit_logger is not None:
         audit_logger.record(

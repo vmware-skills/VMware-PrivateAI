@@ -62,7 +62,7 @@ def test_inspect_bundle_enumerates_and_flags(tmp_path):
 def test_inspect_bundle_missing_file_teaching_error():
     with pytest.raises(PrivateAiError) as ei:
         inspect_bundle("/no/such/pais.yml")
-    assert "pais_bundle_verify" in str(ei.value) or "not found" in str(ei.value).lower()
+    assert "verify_pais_bundle" in str(ei.value) or "not found" in str(ei.value).lower()
 
 
 def test_inspect_bundle_directory_teaching_error(tmp_path):

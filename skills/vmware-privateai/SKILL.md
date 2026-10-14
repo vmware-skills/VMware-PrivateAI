@@ -61,13 +61,13 @@ Web Services API (pyVmomi) plus the PAIS REST API.
 | **Sizing & air-gap** | LLM GPU/storage sizing advisor, local pais.yml image inspector | 2 | 2 R |
 
 **17 MCP tools (16 read / 1 write).** Reads are strictly non-destructive. The single write
-(`vgpu_assign`) previews its blast radius, refuses a powered-on VM, never powers a VM off itself, is
-double-confirmed at the CLI, and is audit-logged. Pre-flight the write with `vgpu_profile_validate`.
+(`assign_vgpu`) previews its blast radius, refuses a powered-on VM, never powers a VM off itself, is
+double-confirmed at the CLI, and is audit-logged. Pre-flight the write with `validate_vgpu_profile`.
 
 ## Quick Install
 
 ```bash
-uv tool install vmware-privateai==1.4.0
+uv tool install vmware-privateai==2.0.0
 vmware-privateai version
 vmware-privateai gpu host-list        # first read — lists hosts that have a GPU
 ```
@@ -85,7 +85,7 @@ Private AI Service — when the context is explicitly VMware / vSphere / VCF Pri
 **Do NOT use when**: the task is the backing VM's lifecycle — power on/off, snapshot, clone, migrate,
 reconfigure CPU/RAM (→ **vmware-aiops**); read-only vSphere inventory, alarms, or host health
 (→ **vmware-monitor**); or GPU-enabled Tanzu Kubernetes / Supervisor namespaces (→ **vmware-vks**).
-`vgpu_assign` deliberately does **not** power the VM off — that is vmware-aiops's job, kept separate
+`assign_vgpu` deliberately does **not** power the VM off — that is vmware-aiops's job, kept separate
 so this skill's blast radius stays "one VM, when it is already off".
 
 ## Related Skills — Skill Routing
@@ -111,7 +111,7 @@ vmware-privateai gpu vgpu-assign fin-train-01 grid_a100-4c --dry-run   # preview
 vmware-privateai gpu vgpu-assign fin-train-01 grid_a100-4c             # double-confirm + audit
 ```
 *Failure branch*: if `vgpu-assign` (confirm) refuses with "VM is powered on — a vGPU change needs the
-VM powered off", run `vmware-aiops vm_power_off 'fin-train-01'` first, then re-run. If it fails with
+VM powered off", run `vmware-aiops power_off_vm 'fin-train-01'` first, then re-run. If it fails with
 "profile not offered by the VM's host / GPU lacks free framebuffer", run
 `vmware-privateai gpu host-get <that VM's host>` to see the valid profiles and free capacity.
 
@@ -144,20 +144,20 @@ fresh token from your Identity Provider, re-export it, and retry.
 
 | Category | Tools | R/W |
 |----------|-------|:---:|
-| GPU inventory | `gpu_host_list`, `gpu_host_get`, `gpu_device_list`, `gpu_consumer_list` | Read |
-| GPU utilization | `gpu_utilization` | Read |
-| GPU readiness | `gpu_host_readiness` | Read |
-| Profile catalog | `vgpu_profile_list`, `directpath_profile_list` | Read |
-| Profile validation | `vgpu_profile_validate` | Read |
-| Private AI Service | `pais_model_list`, `pais_model_catalog`, `pais_knowledge_base_list`, `pais_data_source_list` | Read |
-| PAIS monitoring | `pais_monitoring_summary` | Read |
-| Sizing & air-gap | `pais_sizing_advise`, `pais_bundle_verify` | Read |
-| vGPU assignment | `vgpu_assign` | Write |
+| GPU inventory | `list_gpu_hosts`, `get_gpu_host`, `list_gpu_devices`, `list_gpu_consumers` | Read |
+| GPU utilization | `get_gpu_utilization` | Read |
+| GPU readiness | `check_gpu_host_readiness` | Read |
+| Profile catalog | `list_vgpu_profiles`, `list_directpath_profiles` | Read |
+| Profile validation | `validate_vgpu_profile` | Read |
+| Private AI Service | `list_pais_models`, `get_pais_model_catalog`, `list_pais_knowledge_bases`, `list_pais_data_sources` | Read |
+| PAIS monitoring | `get_pais_monitoring_summary` | Read |
+| Sizing & air-gap | `advise_pais_sizing`, `verify_pais_bundle` | Read |
+| vGPU assignment | `assign_vgpu` | Write |
 
-**INFERRED PAIS paths**: `pais_model_catalog` and `pais_data_source_list` hit PAIS control-plane
+**INFERRED PAIS paths**: `get_pais_model_catalog` and `list_pais_data_sources` hit PAIS control-plane
 paths that are unconfirmed against a live OpenAPI (踩坑 #36) — a 404 returns a base-URL teaching
-message, not a bug. `pais_sizing_advise` and `pais_bundle_verify` need **no connection** (pure
-computation / local file parse). `gpu_host_readiness` reports what the vSphere API exposes and says
+message, not a bug. `advise_pais_sizing` and `verify_pais_bundle` need **no connection** (pure
+computation / local file parse). `check_gpu_host_readiness` reports what the vSphere API exposes and says
 so where it cannot (NVIDIA driver / MFT VIB / MIG need nvidia-smi on the host).
 
 **List envelope**: every `*_list` tool returns `{items, returned, limit, offset, total, truncated, hint}`
@@ -165,7 +165,7 @@ so where it cannot (NVIDIA driver / MFT VIB / MIG need nvidia-smi on the host).
 with `truncated:false` means checked-and-none, not a failure. Lists paginate at `limit=50`; filter with
 the tool's `name`/`vendor`/`host`/`profile`/`vm` arguments rather than paging the whole estate.
 
-**Write safety (normative)**: `vgpu_assign` with `confirm=false` (the default) returns `blast_radius`
+**Write safety (normative)**: `assign_vgpu` with `confirm=false` (the default) returns `blast_radius`
 and changes nothing — VM name and id, current and target profile, `device_change` (`edit` the existing
 vGPU device or `add` one), other passthrough devices left untouched, power state, `blockers`,
 `unmeasured`. The acting response carries it too. Show it to the user and pass `confirm=true` only after
@@ -232,7 +232,7 @@ Full list: `references/cli-reference.md`. Per-tool response-token estimates: `re
    (truncation ≤500 chars + C0/C1 control-char stripping); a KB description is the highest-value
    injection surface here.
 6. **Least Privilege** — read-vs-write authorization is the vCenter role's job: a read-only service
-   account refuses `vgpu_assign`'s ReconfigVM at vCenter, un-bypassably. All writes are recorded in
+   account refuses `assign_vgpu`'s ReconfigVM at vCenter, un-bypassably. All writes are recorded in
    `~/.vmware/audit.db`. See `references/setup-guide.md`.
 
 ## License

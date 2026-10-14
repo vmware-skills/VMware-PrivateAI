@@ -1,4 +1,4 @@
-"""Regression tests for gpu_host_readiness (verified pyVmomi paths, no live vCenter).
+"""Regression tests for check_gpu_host_readiness (verified pyVmomi paths, no live vCenter).
 
 Covers the vgpu_ready verdict logic (GPU present + sharedDirect mode + profiles offered), the
 blocking_reasons for each failure mode, the honest driver_note (spec NO_API), only-GPU-hosts

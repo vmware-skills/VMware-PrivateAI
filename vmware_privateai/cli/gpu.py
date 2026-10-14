@@ -25,7 +25,7 @@ gpu_app = typer.Typer(help="GPU inventory: hosts, physical devices, vGPU consume
 
 @gpu_app.command("host-list")
 @cli_errors
-@audited("gpu_host_list")
+@audited("list_gpu_hosts")
 def gpu_host_list_cmd(
     name: Annotated[str, typer.Option("--name", help="Filter by host name (substring)")] = "",
     vendor: Annotated[str, typer.Option("--vendor", help="Filter by GPU vendor (substring)")] = "",
@@ -48,7 +48,7 @@ def gpu_host_list_cmd(
 
 @gpu_app.command("host-get")
 @cli_errors
-@audited("gpu_host_get")
+@audited("get_gpu_host")
 def gpu_host_get_cmd(
     host_name: Annotated[str, typer.Argument(help="Host name (from host-list)")],
     target: TargetOption = None,
@@ -68,7 +68,7 @@ def gpu_host_get_cmd(
 
 @gpu_app.command("device-list")
 @cli_errors
-@audited("gpu_device_list")
+@audited("list_gpu_devices")
 def gpu_device_list_cmd(
     host: Annotated[str, typer.Option("--host", help="Filter by host name (substring)")] = "",
     vendor: Annotated[str, typer.Option("--vendor", help="Filter by GPU vendor (substring)")] = "",
@@ -91,7 +91,7 @@ def gpu_device_list_cmd(
 
 @gpu_app.command("utilization")
 @cli_errors
-@audited("gpu_utilization")
+@audited("get_gpu_utilization")
 def gpu_utilization_cmd(
     vm: Annotated[str, typer.Option("--vm", help="Filter by VM name (substring)")] = "",
     top: Annotated[int, typer.Option("--top", help="Keep only the N busiest VMs")] = 0,
@@ -117,7 +117,7 @@ def gpu_utilization_cmd(
 
 @gpu_app.command("vgpu-assign")
 @cli_errors
-@guarded("vgpu_assign", risk_level="high")
+@guarded("assign_vgpu", risk_level="high")
 def vgpu_assign_cmd(
     vm_name: Annotated[str, typer.Argument(help="VM to reconfigure (from consumer-list)")],
     profile: Annotated[str, typer.Argument(help="Target vGPU profile (from host-get)")],
@@ -145,7 +145,7 @@ def vgpu_assign_cmd(
 
 @gpu_app.command("consumer-list")
 @cli_errors
-@audited("gpu_consumer_list")
+@audited("list_gpu_consumers")
 def gpu_consumer_list_cmd(
     profile: Annotated[str, typer.Option("--profile", help="Filter by vGPU profile (substring)")] = "",
     vm: Annotated[str, typer.Option("--vm", help="Filter by VM name (substring)")] = "",
@@ -165,7 +165,7 @@ def gpu_consumer_list_cmd(
 
 @gpu_app.command("readiness")
 @cli_errors
-@audited("gpu_host_readiness")
+@audited("check_gpu_host_readiness")
 def gpu_host_readiness_cmd(
     host: Annotated[str, typer.Option("--host", help="Filter/scope by host name (substring)")] = "",
     target: TargetOption = None,

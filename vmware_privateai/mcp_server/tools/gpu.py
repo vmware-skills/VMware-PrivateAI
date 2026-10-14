@@ -1,7 +1,7 @@
 """GPU inventory MCP tools (5 read, 1 write) — the "what GPUs exist, who uses them, assign one" surface.
 
-gpu_host_list, gpu_host_get, gpu_device_list, gpu_utilization, gpu_consumer_list [READ];
-vgpu_assign [WRITE]. Signatures use ``Optional[X]`` (not PEP 604) because FastMCP/Pydantic
+list_gpu_hosts, get_gpu_host, list_gpu_devices, get_gpu_utilization, list_gpu_consumers [READ];
+assign_vgpu [WRITE]. Signatures use ``Optional[X]`` (not PEP 604) because FastMCP/Pydantic
 reflect them under interpreters where the union form can raise (踩坑 #33).
 """
 
@@ -19,7 +19,7 @@ _WRITE = {"readOnlyHint": False, "destructiveHint": True, "idempotentHint": Fals
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def gpu_host_list(
+def list_gpu_hosts(
     name: Optional[str] = None,
     vendor: Optional[str] = None,
     limit: int = 50,
@@ -30,7 +30,7 @@ def gpu_host_list(
 
     Returns a {items, returned, limit, total, truncated, hint} envelope; each item has
     host, gpu_count, vendors, vgpu_vms (VMs currently backed by a vGPU on that host).
-    Use gpu_host_get for full per-GPU detail of one host. Requires a valid vCenter connection.
+    Use get_gpu_host for full per-GPU detail of one host. Requires a valid vCenter connection.
 
     Args:
         name: Substring-match the host name.
@@ -40,36 +40,36 @@ def gpu_host_list(
         target: vCenter/ESXi target from config.yaml; omit to use the default.
     """
     try:
-        from vmware_privateai.ops.gpu import list_gpu_hosts
+        from vmware_privateai.ops.gpu import list_gpu_hosts as _ops_list_gpu_hosts
 
-        return list_gpu_hosts(_get_connection(target), name=name, vendor=vendor, limit=limit, offset=offset)
+        return _ops_list_gpu_hosts(_get_connection(target), name=name, vendor=vendor, limit=limit, offset=offset)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "gpu_host_list")}
+        return {"error": _safe_error(exc, "list_gpu_hosts")}
 
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def gpu_host_get(host_name: str, target: Optional[str] = None) -> dict:
+def get_gpu_host(host_name: str, target: Optional[str] = None) -> dict:
     """[READ] Full GPU detail for one host by name — every GPU's device, type, memory, consumers.
 
     A wrong host name returns a teaching error listing hosts that do have GPUs, not a
-    traceback. Use gpu_host_list to discover host names.
+    traceback. Use list_gpu_hosts to discover host names.
 
     Args:
-        host_name: The ESXi host name (from gpu_host_list).
+        host_name: The ESXi host name (from list_gpu_hosts).
         target: vCenter/ESXi target from config.yaml; omit to use the default.
     """
     try:
-        from vmware_privateai.ops.gpu import get_gpu_host
+        from vmware_privateai.ops.gpu import get_gpu_host as _ops_get_gpu_host
 
-        return get_gpu_host(_get_connection(target), host_name)
+        return _ops_get_gpu_host(_get_connection(target), host_name)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "gpu_host_get")}
+        return {"error": _safe_error(exc, "get_gpu_host")}
 
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def gpu_device_list(
+def list_gpu_devices(
     host: Optional[str] = None,
     vendor: Optional[str] = None,
     limit: int = 50,
@@ -89,16 +89,16 @@ def gpu_device_list(
         target: vCenter/ESXi target from config.yaml; omit to use the default.
     """
     try:
-        from vmware_privateai.ops.gpu import list_gpu_devices
+        from vmware_privateai.ops.gpu import list_gpu_devices as _ops_list_gpu_devices
 
-        return list_gpu_devices(_get_connection(target), host=host, vendor=vendor, limit=limit, offset=offset)
+        return _ops_list_gpu_devices(_get_connection(target), host=host, vendor=vendor, limit=limit, offset=offset)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "gpu_device_list")}
+        return {"error": _safe_error(exc, "list_gpu_devices")}
 
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def gpu_utilization(
+def get_gpu_utilization(
     vm: Optional[str] = None,
     top: Optional[int] = None,
     limit: int = 50,
@@ -119,16 +119,16 @@ def gpu_utilization(
         target: vCenter/ESXi target from config.yaml; omit to use the default.
     """
     try:
-        from vmware_privateai.ops.utilization import gpu_utilization as _util
+        from vmware_privateai.ops.utilization import gpu_utilization as _ops_gpu_utilization
 
-        return _util(_get_connection(target), vm=vm, top=top, limit=limit, offset=offset)
+        return _ops_gpu_utilization(_get_connection(target), vm=vm, top=top, limit=limit, offset=offset)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "gpu_utilization")}
+        return {"error": _safe_error(exc, "get_gpu_utilization")}
 
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def gpu_consumer_list(
+def list_gpu_consumers(
     profile: Optional[str] = None,
     vm: Optional[str] = None,
     limit: int = 50,
@@ -148,16 +148,16 @@ def gpu_consumer_list(
         target: vCenter/ESXi target from config.yaml; omit to use the default.
     """
     try:
-        from vmware_privateai.ops.gpu import list_gpu_consumers
+        from vmware_privateai.ops.gpu import list_gpu_consumers as _ops_list_gpu_consumers
 
-        return list_gpu_consumers(_get_connection(target), profile=profile, vm=vm, limit=limit, offset=offset)
+        return _ops_list_gpu_consumers(_get_connection(target), profile=profile, vm=vm, limit=limit, offset=offset)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "gpu_consumer_list")}
+        return {"error": _safe_error(exc, "list_gpu_consumers")}
 
 
 @mcp.tool(annotations=_READ)
 @vmware_tool(risk_level="low")
-def gpu_host_readiness(
+def check_gpu_host_readiness(
     host: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
@@ -178,16 +178,16 @@ def gpu_host_readiness(
         target: vCenter/ESXi target from config.yaml; omit to use the default.
     """
     try:
-        from vmware_privateai.ops.readiness import gpu_host_readiness as _readiness
+        from vmware_privateai.ops.readiness import gpu_host_readiness as _ops_gpu_host_readiness
 
-        return _readiness(_get_connection(target), host=host, limit=limit, offset=offset)
+        return _ops_gpu_host_readiness(_get_connection(target), host=host, limit=limit, offset=offset)
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "gpu_host_readiness")}
+        return {"error": _safe_error(exc, "check_gpu_host_readiness")}
 
 
 @mcp.tool(annotations=_WRITE)
 @vmware_tool(risk_level="high")
-def vgpu_assign(
+def assign_vgpu(
     vm_name: str,
     profile: str,
     confirm: bool = False,
@@ -204,16 +204,16 @@ def vgpu_assign(
     because the user asked for this earlier: they have not seen the blast radius yet. Audited.
 
     Args:
-        vm_name: The VM to reconfigure (from gpu_consumer_list).
-        profile: The target vGPU profile name (from gpu_host_get).
+        vm_name: The VM to reconfigure (from list_gpu_consumers).
+        profile: The target vGPU profile name (from get_gpu_host).
         confirm: False (default) returns the blast radius and changes nothing. True applies it
             (the VM must be powered off).
         target: vCenter/ESXi target from config.yaml; omit to use the default.
     """
     try:
-        from vmware_privateai.ops.assign import assign_vgpu
+        from vmware_privateai.ops.assign import assign_vgpu as _ops_assign_vgpu
 
-        return assign_vgpu(
+        return _ops_assign_vgpu(
             _get_connection(target),
             vm_name,
             profile,
@@ -222,4 +222,4 @@ def vgpu_assign(
             target_name=_target_name(target),
         )
     except Exception as exc:  # noqa: BLE001
-        return {"error": _safe_error(exc, "vgpu_assign")}
+        return {"error": _safe_error(exc, "assign_vgpu")}

@@ -152,7 +152,7 @@ def inspect_bundle(manifest_path: str) -> dict:
     path = Path(manifest_path).expanduser()
     if not path.exists():
         raise PrivateAiError(
-            f"Manifest not found: '{manifest_path}'. Point pais_bundle_verify at a local pais.yml / "
+            f"Manifest not found: '{manifest_path}'. Point verify_pais_bundle at a local pais.yml / "
             f"bundle manifest file (the one downloaded from the Broadcom portal)."
         )
     if not path.is_file():
@@ -217,6 +217,6 @@ def inspect_bundle(manifest_path: str) -> dict:
             "Mirror registries_to_mirror into your internal Harbor, then repoint pais.yml at it. "
             "This is a LOCAL parse — it does not verify the images are actually pullable."
             if images
-            else "No images parsed — see warnings. Point pais_bundle_verify at the real pais.yml."
+            else "No images parsed — see warnings. Point verify_pais_bundle at the real pais.yml."
         ),
     }

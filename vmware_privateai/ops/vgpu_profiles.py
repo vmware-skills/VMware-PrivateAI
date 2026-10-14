@@ -136,14 +136,14 @@ def list_directpath_profiles(
 
     An empty envelope means the vCenter has zero DirectPath profiles (checked-and-none). If the
     DirectPathProfileManager is absent, this vCenter predates 9.0 — a teaching error routes the
-    operator to ``vgpu_profile_list`` rather than reading absence as "no profiles" (踩坑 形态 #1).
+    operator to ``list_vgpu_profiles`` rather than reading absence as "no profiles" (踩坑 形态 #1).
     """
     content = get_content(si)
     dppm = getattr(content, "directPathProfileManager", None)
     if dppm is None:
         raise GpuNotFoundError(
             "DirectPath profiles need vCenter 9.0+ (DirectPathProfileManager is not present on "
-            "this vCenter). Use vgpu_profile_list for the vGPU profile catalog, which works on 8.x."
+            "this vCenter). Use list_vgpu_profiles for the vGPU profile catalog, which works on 8.x."
         )
     infos = dppm.ListDirectPathProfiles(filterSpec=None) or []
     profiles = [_project_directpath(i) for i in infos]

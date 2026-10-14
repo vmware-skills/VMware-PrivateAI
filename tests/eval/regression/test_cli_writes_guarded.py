@@ -3,12 +3,12 @@
 A write CLI command must route through vmware_policy's guard() + audit_call() —
 the same enforcement @vmware_tool gives the MCP surface — so ``vmware-privateai
 gpu vgpu-assign`` run through Bash is authorized and audited to
-~/.vmware/audit.db exactly like the ``vgpu_assign`` MCP tool.
+~/.vmware/audit.db exactly like the ``assign_vgpu`` MCP tool.
 
 It must also be guarded under the MCP tool's *name*. A deny rule names an
 operation; ``@guarded`` without an explicit name authorizes and audits under
 the Python function name (``vgpu_assign_cmd``), so a rule written against
-``vgpu_assign`` refused the agent and let the same reconfigure through the CLI,
+``assign_vgpu`` refused the agent and let the same reconfigure through the CLI,
 and the one audit sink recorded the two surfaces under two names.
 
 The write set is DERIVED, never hand-listed (踩坑 #43): a tool annotated
@@ -93,7 +93,7 @@ def _ops_refs(tree: ast.AST) -> tuple[dict[str, str], set[str]]:
     """(local name -> REAL ops function name, ops-module aliases).
 
     ``from <pkg>.ops.mod import real as _alias`` maps ``_alias -> real`` so an
-    aliased call (the tools alias ``gpu_utilization as _util``) resolves to the
+    aliased call (the tools alias ``get_gpu_utilization as _util``) resolves to the
     same op an un-aliased import names; ``from <pkg>.ops import mod as _m``
     records ``_m`` so ``_m.func()`` resolves to ``func``.
     """
@@ -320,7 +320,7 @@ def test_ast_reader_agrees_with_the_decorator():
 
 
 def test_one_deny_rule_naming_the_mcp_tool_stops_the_cli_command(tmp_path, monkeypatch):
-    """The point of the naming rule, end to end: deny ``vgpu_assign`` and the CLI is refused too.
+    """The point of the naming rule, end to end: deny ``assign_vgpu`` and the CLI is refused too.
 
     The refusal happens in guard(), before the command body — so the connection
     helper must never be reached. Before the fix the CLI was guarded as
@@ -335,7 +335,7 @@ def test_one_deny_rule_naming_the_mcp_tool_stops_the_cli_command(tmp_path, monke
 
     rules = tmp_path / "rules.yaml"
     rules.write_text(
-        'deny:\n  - name: no-vgpu-assign\n    operations: ["vgpu_assign"]\n    reason: frozen\n',
+        'deny:\n  - name: no-vgpu-assign\n    operations: ["assign_vgpu"]\n    reason: frozen\n',
         encoding="utf-8",
     )
     monkeypatch.setattr(pm, "_engine", pm.PolicyEngine(rules))
