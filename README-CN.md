@@ -10,10 +10,17 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 > 赞助关系。** "VMware"、"vSphere"、"VCF" 为 Broadcom 商标;"NVIDIA"、"vGPU" 为 NVIDIA 商标。源码遵循
 > MIT 许可,公开可审计:[github.com/vmware-skills/VMware-PrivateAI](https://github.com/vmware-skills/VMware-PrivateAI)。
 
-> **状态:v0.1.0(beta)。** 家族第 15 个 skill,走独立 1.x 版本线。每条 API 路径在使用前都对照官方
+> **状态:v0.1.0(beta)。** 家族第 15 个 skill,走独立版本线。每条 API 路径在使用前都对照官方
 > Broadcom/NVIDIA 资料核实(见 `tests/eval/spec/privateai_endpoints.py`)——不凭记忆编写端点。GET 响应
 > **字段名** 与 PAIS 的确切路径为防御式,待真机 9.x 硬件验证(见下方 beta 活口)。由家族 harness 治理
 > (审计 + 策略 + 教学性错误);读写授权交由 vCenter 服务账号的 RBAC 角色。
+
+## 升级到 2.0
+
+2.0 把 17 个 MCP 工具改成动词在前（例如 `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`），完整的新旧名对照表见
+[RELEASE_NOTES.md](RELEASE_NOTES.md#v200--mcp-tools-renamed-verb-first)。其他都不变：工具、参数、安全确认门和 CLI 命令都一样。
+如果 agent 提示词、脚本或 `~/.vmware/rules.yaml` 里写了工具名，请改成新名——不过用旧名写的 deny 规则在
+vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改名而多匹配的规则），vmware-pilot ≥ 1.13 也会自动转换已保存工作流里的旧名。
 
 ## 能力(17 工具:16 读 / 1 写)
 
