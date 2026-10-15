@@ -48,7 +48,7 @@ pre-check with `validate_vgpu_profile` first.
 `assign_vgpu` takes `confirm` (default `false`). Without it the call returns `blast_radius` — the VM's name and id,
 current and target profile, whether its vGPU device is edited or a new one added, power state, `blockers` and
 `unmeasured` — and changes nothing. `confirm=true` is refused for a powered-on or suspended VM, a name shared by
-several VMs, and a VM whose power state or devices cannot be read. It never powers a VM off itself.
+several VMs, and a VM whose power state or devices cannot be read.
 `get_pais_model_catalog` / `list_pais_data_sources` use unconfirmed PAIS control-plane paths (pitfall #36: a 404
 returns a base-URL teaching hint and is not a bug); `advise_pais_sizing` / `verify_pais_bundle` need no connection
 (pure computation / local file parsing).

@@ -41,7 +41,7 @@ vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改�
 CLI 双重确认、统一审计到 `~/.vmware/audit.db`;可先用 `validate_vgpu_profile` 预检。
 `assign_vgpu` 的 `confirm` 默认 `false`:不带它调用时返回 `blast_radius` —— 虚机名称与 id、当前与目标配置、
 是修改已有 vGPU 设备还是新增一个、电源状态、`blockers` 与 `unmeasured` —— 不做任何改动。已开机或挂起的虚机、
-多台虚机同名、电源状态或设备列表读不到时,`confirm=true` 会被拒绝。它绝不会自行给虚机关机。
+多台虚机同名、电源状态或设备列表读不到时,`confirm=true` 会被拒绝。
 `get_pais_model_catalog` / `list_pais_data_sources` 走未确认的 PAIS 控制面路径(踩坑 #36:404 返回 base-URL
 教学提示,不当 bug);`advise_pais_sizing` / `verify_pais_bundle` 无需连接(纯计算 / 本地文件解析)。
 
