@@ -10,9 +10,9 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 > 赞助关系。** "VMware"、"vSphere"、"VCF" 为 Broadcom 商标;"NVIDIA"、"vGPU" 为 NVIDIA 商标。源码遵循
 > MIT 许可,公开可审计:[github.com/vmware-skills/VMware-PrivateAI](https://github.com/vmware-skills/VMware-PrivateAI)。
 
-> **状态:v0.1.0(beta)。** 家族第 15 个 skill,走独立版本线。每条 API 路径在使用前都对照官方
+> **状态:beta。** 家族第 15 个 skill,走独立版本线。每条 API 路径在使用前都对照官方
 > Broadcom/NVIDIA 资料核实(见 `tests/eval/spec/privateai_endpoints.py`)——不凭记忆编写端点。GET 响应
-> **字段名** 与 PAIS 的确切路径为防御式,待真机 9.x 硬件验证(见下方 beta 活口)。由家族 harness 治理
+> **字段名** 与 PAIS 的确切路径为防御式,待真机 9.x 硬件验证(见 `skills/vmware-privateai/SKILL.md` 里的 beta 活口)。由家族 harness 治理
 > (审计 + 策略 + 教学性错误);读写授权交由 vCenter 服务账号的 RBAC 角色。
 
 ## 升级到 2.0
@@ -23,7 +23,7 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改名而多匹配的规则），vmware-pilot ≥ 1.13 也会自动转换已保存工作流里的旧名。
 如果还有 2.0 之前的安装共用这个 `rules.yaml`，请把它的 vmware-policy 也升到 ≥ 1.18.2：它会按新旧两个名字匹配每条规则，一份文件两边都管用。
 
-## 能力(17 工具:16 读 / 1 写)
+## 能力(17 个 MCP 工具 —— 16 读 / 1 写)
 
 | 类别 | 工具 | 读/写 |
 |------|------|:----:|
@@ -89,6 +89,8 @@ HTTP 401/403 表示 `VMWARE_PRIVATEAI_PAIS_TOKEN` 过期或缺权限,重新取 t
 - [vmware-aiops](https://github.com/vmware-skills/VMware-AIops) —— AI 负载背后的 vCenter 虚机(开关机/快照/克隆/迁移)
 - [vmware-vks](https://github.com/vmware-skills/VMware-VKS) —— GPU 使能的 Tanzu Kubernetes
 - [vmware-monitor](https://github.com/vmware-skills/VMware-Monitor) —— 只读 vSphere 健康
+
+本 skill 是这三者之上的 GPU 视角。
 
 ## 安全
 详见仓库根目录 `SECURITY.md`。要点:凭据仅存 `.env`(chmod 600、`b64:` 混淆);默认开启 TLS 校验;

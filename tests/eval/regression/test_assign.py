@@ -117,7 +117,7 @@ def test_confirm_on_powered_off_applies_and_audits(monkeypatch):
     out = assign.assign_vgpu(None, "train-01", "grid_a100-4c", confirm=True, audit_logger=audit, target_name="prod")
     assert out["applied"] is True
     assert vm.reconfigured_with is not None  # ReconfigVM_Task was called
-    assert recorded["operation"] == "vgpu_assign" and recorded["resource"] == "train-01"
+    assert recorded["operation"] == "assign_vgpu" and recorded["resource"] == "train-01"
     assert recorded["result"] == "ok"
 
 

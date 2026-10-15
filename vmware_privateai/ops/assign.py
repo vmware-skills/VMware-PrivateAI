@@ -207,7 +207,7 @@ def assign_vgpu(
     except Exception as exc:  # noqa: BLE001 — surface as a teaching error + audit the failure
         if audit_logger is not None:
             audit_logger.record(
-                target=target_name, operation="vgpu_assign", resource=vm_name,
+                target=target_name, operation="assign_vgpu", resource=vm_name,
                 parameters={"target_profile": profile, "from_profile": current}, result="error",
             )
         raise PrivateAiError(
@@ -218,7 +218,7 @@ def assign_vgpu(
     if audit_logger is not None:
         audit_logger.record(
             target=target_name,
-            operation="vgpu_assign",
+            operation="assign_vgpu",
             resource=vm_name,
             parameters={"target_profile": profile, "from_profile": current},
             result="ok",
