@@ -12,8 +12,8 @@
 **Check what the account may do (HLD §17 D-17).** New read tool `get_access_info` (CLI: `vmware-privateai
 access-info [--tool NAME] [--target T]`) reports which account the server uses and, per tool, whether it holds the
 vSphere privileges the tool needs on the root folder. `not_granted_at_root` is not "no access"; `undetermined` is
-never read as granted. The PAIS tools use a bearer token, so they show as needing no vSphere privilege, and only
-the reads of `assign_vgpu` are checked. 18 MCP tools (17 read, 1 write).
+never read as granted. The PAIS tools use a bearer token, so they show as needing no vSphere privilege;
+`assign_vgpu` is checked for the device change and resource change it makes. 18 MCP tools (17 read, 1 write).
 
 Requires `vmware-policy>=1.22.0`.
 

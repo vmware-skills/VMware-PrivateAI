@@ -30,7 +30,7 @@ def get_access_info(tool: Optional[str] = None, target: Optional[str] = None) ->
     is NOT "no access" — it may be granted on a specific cluster, host or VM. undetermined means
     vCenter did not answer; never read it as granted. PAIS tools use a bearer token, not vSphere,
     so they show as needing no vSphere privilege; assign_vgpu's entry includes the
-    device-change privilege (VirtualMachine.Config.AddRemoveDevice).
+    device-change and resource-change privileges it needs.
 
     Args:
         tool: One tool name on this server, e.g. "assign_vgpu". Omit to summarize every tool.

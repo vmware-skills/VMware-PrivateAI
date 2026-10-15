@@ -37,7 +37,8 @@ REQUIREMENTS: dict[str, list[str]] = {
     "get_gpu_utilization": list(_READ),
     "list_gpu_consumers": list(_READ),
     "check_gpu_host_readiness": list(_READ),
-    "assign_vgpu": [*_READ, "VirtualMachine.Config.AddRemoveDevice"],
+    # memoryReservationLockedToMax=True is a resource-allocation change (Config.Resource).
+    "assign_vgpu": [*_READ, "VirtualMachine.Config.AddRemoveDevice", "VirtualMachine.Config.Resource"],
     "list_pais_models": [],  # PAIS REST, bearer token; see above
     "list_pais_knowledge_bases": [],
     "get_pais_model_catalog": [],

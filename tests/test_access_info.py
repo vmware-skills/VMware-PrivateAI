@@ -63,11 +63,19 @@ def test_tool_reports_the_helpers_verdict(manager: ConnectionManager) -> None:
     assert out["tool"]["missing_at_root"] == [
         "System.Read",
         "VirtualMachine.Config.AddRemoveDevice",
+        "VirtualMachine.Config.Resource",
     ]
 
 
 def test_whole_server_summary_groups_tools(manager: ConnectionManager) -> None:
-    si = _fake_si({"System.View": True, "System.Read": True, "VirtualMachine.Config.AddRemoveDevice": True})
+    si = _fake_si(
+        {
+            "System.View": True,
+            "System.Read": True,
+            "VirtualMachine.Config.AddRemoveDevice": True,
+            "VirtualMachine.Config.Resource": True,
+        }
+    )
     with patch.object(manager, "connect", return_value=si):
         out = get_access_info()
     assert "list_pais_models" in out["tools_no_privilege_needed"]
