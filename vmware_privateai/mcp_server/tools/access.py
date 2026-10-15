@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Optional
 
 from vmware_policy import vmware_tool
-from vmware_policy.access import vsphere_access_info
+from vmware_policy.access import unknown_tool_message, vsphere_access_info
 
 from vmware_privateai.access_requirements import REQUIREMENTS
 from vmware_privateai.mcp_server._shared import _get_manager, _safe_error, mcp
@@ -29,13 +29,16 @@ def get_access_info(tool: Optional[str] = None, target: Optional[str] = None) ->
     verdict. Gotchas: privileges are checked on the root folder only, and not_granted_at_root
     is NOT "no access" — it may be granted on a specific cluster, host or VM. undetermined means
     vCenter did not answer; never read it as granted. PAIS tools use a bearer token, not vSphere,
-    so they show as needing no vSphere privilege; assign_vgpu also needs a device-change
-    privilege this does not list.
+    so they show as needing no vSphere privilege; assign_vgpu's entry includes the
+    device-change privilege (VirtualMachine.Config.AddRemoveDevice).
 
     Args:
         tool: One tool name on this server, e.g. "assign_vgpu". Omit to summarize every tool.
         target: vCenter/ESXi target from config.yaml; omit to use the default.
     """
+    unknown = unknown_tool_message(tool, REQUIREMENTS)  # no login for a misspelled name
+    if unknown:
+        return {"error": unknown}
     try:
         mgr = _get_manager()
         name = mgr.resolve_target_name(target)

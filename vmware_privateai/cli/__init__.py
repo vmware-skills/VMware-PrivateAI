@@ -86,12 +86,16 @@ def access_info(
     import json
     from pathlib import Path
 
-    from vmware_policy.access import vsphere_access_info
+    from vmware_policy.access import unknown_tool_message, vsphere_access_info
 
     from vmware_privateai.access_requirements import REQUIREMENTS
     from vmware_privateai.config import load_config
     from vmware_privateai.connection import ConnectionManager
 
+    unknown = unknown_tool_message(tool, REQUIREMENTS)  # before connecting: no login for a typo
+    if unknown:
+        typer.echo(unknown, err=True)
+        raise typer.Exit(2)
     mgr = ConnectionManager.from_config(load_config(Path(config)) if config else None)
     name = mgr.resolve_target_name(target)
     result = vsphere_access_info(mgr.connect(name), target=name, requirements=REQUIREMENTS, tool=tool)
