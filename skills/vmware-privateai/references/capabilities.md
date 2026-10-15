@@ -102,8 +102,8 @@ only, so any account can ask about itself). Checked on the **root folder**: `not
 "no access" — the privilege may be granted on a cluster, host or VM. `undetermined` is never read as
 granted. The per-tool table is `vmware_privateai/access_requirements.py`, derived from pyVmomi's metadata.
 Two limits: the PAIS tools use a bearer token, not vSphere, so they show as needing no vSphere privilege
-(the token's scope is not checked); and `assign_vgpu`'s device-change privilege is not in pyVmomi's
-metadata, so only its reads are checked. CLI: `vmware-privateai access-info [--tool T] [--target T]`.
+(the token's scope is not checked); and `assign_vgpu` also needs VirtualMachine.Config.AddRemoveDevice,
+which vCenter checks inside the reconfigure call (not yet verified against a live vCenter's privilege list). CLI: `vmware-privateai access-info [--tool T] [--target T]`.
 
 ## vGPU assignment (1 write)
 | Tool | R/W | Risk | Blast radius |

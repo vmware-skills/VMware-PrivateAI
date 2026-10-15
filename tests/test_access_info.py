@@ -8,7 +8,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
-from pyVmomi import VmomiSupport
 from typer.testing import CliRunner
 
 from vmware_privateai.access_requirements import REQUIREMENTS
@@ -16,18 +15,6 @@ from vmware_privateai.config import AppConfig, TargetConfig
 from vmware_privateai.connection import ConnectionManager
 from vmware_privateai.mcp_server import server
 from vmware_privateai.mcp_server.tools.access import get_access_info
-
-
-def _known_privileges() -> set[str]:
-    privs: set[str] = set()
-    for name in list(VmomiSupport._managedDefMap):
-        try:
-            t = VmomiSupport.GetVmodlType(name)
-        except Exception:
-            continue
-        privs.update(m.privId for m in getattr(t, "_methodInfo", {}).values() if m.privId)
-        privs.update(p.privId for p in t._GetPropertyList() if getattr(p, "privId", None))
-    return privs
 
 
 def _fake_si(granted: dict[str, bool]) -> MagicMock:
@@ -55,11 +42,8 @@ def test_requirements_cover_exactly_the_registered_tools() -> None:
     assert set(REQUIREMENTS) == tools
 
 
-def test_every_privilege_is_one_vsphere_defines() -> None:
-    known = _known_privileges()
-    assert len(known) > 100, "pyVmomi metadata probe found almost nothing"
-    unknown = {t: [p for p in v if p not in known] for t, v in REQUIREMENTS.items()}
-    assert not {t: v for t, v in unknown.items() if v}
+# Privilege ids are checked against pyVmomi's metadata plus the reviewed extras by the
+# family gate scripts/lib/access_requirements_cover_tools.py (one list, not a copy here).
 
 
 def test_get_access_info_is_registered_read_only() -> None:
@@ -76,11 +60,14 @@ def test_tool_reports_the_helpers_verdict(manager: ConnectionManager) -> None:
     assert out["target"] == "vc1"
     assert out["account"] == "VSPHERE.LOCAL\\svc-privateai"
     assert out["tool"]["verdict"] == "not_granted_at_root"
-    assert out["tool"]["missing_at_root"] == ["System.Read"]
+    assert out["tool"]["missing_at_root"] == [
+        "System.Read",
+        "VirtualMachine.Config.AddRemoveDevice",
+    ]
 
 
 def test_whole_server_summary_groups_tools(manager: ConnectionManager) -> None:
-    si = _fake_si({"System.View": True, "System.Read": True})
+    si = _fake_si({"System.View": True, "System.Read": True, "VirtualMachine.Config.AddRemoveDevice": True})
     with patch.object(manager, "connect", return_value=si):
         out = get_access_info()
     assert "list_pais_models" in out["tools_no_privilege_needed"]

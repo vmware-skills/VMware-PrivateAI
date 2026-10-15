@@ -11,10 +11,9 @@ metadata (``_GetMethodInfo(name).privId`` / property ``privId``):
   validation) and ``DirectPathProfileManager.ListDirectPathProfiles`` are
   System.View;
 * ``VirtualMachine.ReconfigVM_Task`` (``assign_vgpu``) carries no privId in the
-  metadata. vSphere checks the device change itself (adding or editing a PCI
-  device), and those privileges are not in pyVmomi's metadata, so the family
-  gate cannot accept them yet (reported, not added): the verdict for
-  ``assign_vgpu`` covers only its reads.
+  metadata. vSphere checks the device change itself: adding a PCI/vGPU device
+  needs VirtualMachine.Config.AddRemoveDevice, a reviewed extra in the family
+  gate (verify against a live vCenter's privilegeList).
 
 The PAIS tools call the Private AI Service REST API with a bearer token from the
 Identity Provider, not vSphere, so they need no vSphere privilege; whether the
@@ -38,7 +37,7 @@ REQUIREMENTS: dict[str, list[str]] = {
     "get_gpu_utilization": list(_READ),
     "list_gpu_consumers": list(_READ),
     "check_gpu_host_readiness": list(_READ),
-    "assign_vgpu": list(_READ),  # + the device-change privilege; see above
+    "assign_vgpu": [*_READ, "VirtualMachine.Config.AddRemoveDevice"],
     "list_pais_models": [],  # PAIS REST, bearer token; see above
     "list_pais_knowledge_bases": [],
     "get_pais_model_catalog": [],
