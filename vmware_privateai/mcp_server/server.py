@@ -105,12 +105,26 @@ def _exit_on_stop_signals() -> None:
         signal.signal(sig, _stop)
 
 
-def main(expose: Optional[str] = None, allow_write: Optional[str] = None) -> None:
+def main(
+    expose: Optional[str] = None,
+    allow_write: Optional[str] = None,
+    transport: Optional[str] = None,
+    host: Optional[str] = None,
+    port: Optional[int] = None,
+    cert: Optional[str] = None,
+    key: Optional[str] = None,
+    public_name: Optional[str] = None,
+    token_file: Optional[str] = None,
+) -> None:
     """Entry point for the ``vmware-privateai-mcp`` / ``vmware-privateai mcp`` command."""
     _exit_on_stop_signals()
-    from vmware_policy.exposure import apply_or_exit
-    apply_or_exit(mcp, skill="privateai", expose=expose, allow_write=allow_write)
-    mcp.run()
+    from vmware_policy.serve import run_server
+    run_server(
+        mcp,
+        skill="privateai",
+        expose=expose, allow_write=allow_write, transport=transport, host=host, port=port,
+        cert=cert, key=key, public_name=public_name, token_file=token_file,
+    )
 
 
 if __name__ == "__main__":
