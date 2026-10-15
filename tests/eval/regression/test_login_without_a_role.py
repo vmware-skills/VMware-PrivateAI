@@ -84,7 +84,7 @@ def test_normal_login_is_unaffected(monkeypatch):
 
 def test_doctor_row_names_the_missing_role(role_less, monkeypatch, tmp_path):
     cfg_file = tmp_path / "config.yaml"
-    cfg_file.write_text("targets: []\n")
+    cfg_file.write_text("targets: []\n", encoding="utf-8")
     monkeypatch.setattr(doctor, "resolve_config_path", lambda *a, **k: cfg_file)
     monkeypatch.setattr(doctor, "load_config", lambda *a, **k: _config())
     buf = io.StringIO()
