@@ -12,6 +12,8 @@ FastMCP/Pydantic reflect them at import time.
 
 from __future__ import annotations
 
+from typing import Optional
+
 from vmware_policy import (
     describe_tool_parameters,
 )
@@ -103,9 +105,11 @@ def _exit_on_stop_signals() -> None:
         signal.signal(sig, _stop)
 
 
-def main() -> None:
+def main(expose: Optional[str] = None, allow_write: Optional[str] = None) -> None:
     """Entry point for the ``vmware-privateai-mcp`` / ``vmware-privateai mcp`` command."""
     _exit_on_stop_signals()
+    from vmware_policy.exposure import apply_or_exit
+    apply_or_exit(mcp, skill="privateai", expose=expose, allow_write=allow_write)
     mcp.run()
 
 

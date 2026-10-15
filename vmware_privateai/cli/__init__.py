@@ -7,6 +7,7 @@ uses the PATH entry point and never re-resolves from PyPI like ``uvx`` does).
 
 from __future__ import annotations
 
+from typing import Optional
 import typer
 
 from vmware_privateai import __version__
@@ -71,8 +72,20 @@ def doctor() -> None:
 
 @app.command()
 @cli_local("starts the MCP server; its tools audit themselves")
-def mcp() -> None:
+def mcp(
+    expose: Optional[str] = typer.Option(
+        None,
+        "--expose",
+        help="Which tools to offer: all (default) or read. Limits what clients see; "
+        "not authorization: the account's permissions still decide.",
+    ),
+    allow_write: Optional[str] = typer.Option(
+        None,
+        "--allow-write",
+        help="With --expose read: comma-separated write tools to offer as well.",
+    ),
+) -> None:
     """Run the MCP server over stdio (used by MCP clients as `vmware-privateai mcp`)."""
     from vmware_privateai.mcp_server.server import main
 
-    main()
+    main(expose=expose, allow_write=allow_write)
