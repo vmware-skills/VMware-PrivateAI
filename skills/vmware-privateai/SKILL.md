@@ -57,8 +57,9 @@ Web Services API (pyVmomi) plus the PAIS REST API.
 | **Private AI Service** | served-model list, model catalog, knowledge-base list, data-source list | 4 | 4 R |
 | **PAIS monitoring** | fleet GPU rollup (util/mem/temp, hot/idle, busiest) | 1 | 1 R |
 | **Sizing & air-gap** | LLM GPU/storage sizing advisor, local pais.yml image inspector | 2 | 2 R |
+| **Access self-check** | account in use + whether it holds each tool's vSphere privileges (root folder) | 1 | 1 R |
 
-**17 MCP tools (16 read / 1 write).** Reads are strictly non-destructive. The single write
+**18 MCP tools (17 read / 1 write).** Reads are strictly non-destructive. The single write
 (`assign_vgpu`) previews its blast radius, refuses a powered-on VM, never powers a VM off itself, is
 double-confirmed at the CLI, and is audit-logged. Pre-flight the write with `validate_vgpu_profile`.
 
@@ -104,6 +105,7 @@ so this skill's blast radius stays "one VM, when it is already off".
 vmware-privateai gpu device-list --vendor NVIDIA     # find GPUs; vm_count 0 = idle
 vmware-privateai gpu consumer-list                   # who holds a vGPU, and which profile
 vmware-privateai vgpu profile-list --host esx-07     # profiles that host can hand a VM
+vmware-privateai access-info --tool assign_vgpu       # account rights at the root folder
 vmware-privateai gpu vgpu-assign fin-train-01 grid_a100-4c --dry-run   # preview blast radius
 # power the VM off with vmware-aiops, THEN:
 vmware-privateai gpu vgpu-assign fin-train-01 grid_a100-4c             # double-confirm + audit
@@ -138,7 +140,7 @@ fresh token from your Identity Provider, re-export it, and retry.
 - **MCP** — agent-driven operations with structured JSON; run `vmware-privateai mcp` (an installed
   console script, so no `uvx` network re-resolve — works through enterprise TLS proxies, 踩坑 #25).
 
-## MCP Tools (17 — 16 read, 1 write)
+## MCP Tools (18 — 17 read, 1 write)
 
 | Category | Tools | R/W |
 |----------|-------|:---:|
@@ -150,6 +152,7 @@ fresh token from your Identity Provider, re-export it, and retry.
 | Private AI Service | `list_pais_models`, `get_pais_model_catalog`, `list_pais_knowledge_bases`, `list_pais_data_sources` | Read |
 | PAIS monitoring | `get_pais_monitoring_summary` | Read |
 | Sizing & air-gap | `advise_pais_sizing`, `verify_pais_bundle` | Read |
+| Access self-check | `get_access_info` | Read |
 | vGPU assignment | `assign_vgpu` | Write |
 
 **INFERRED PAIS paths**: `get_pais_model_catalog` and `list_pais_data_sources` hit PAIS control-plane
@@ -192,6 +195,7 @@ vmware-privateai pais data-source-list [--name N]            # PAIS RAG data sou
 vmware-privateai pais monitoring-summary [--top N]           # fleet GPU rollup (util/mem/temp, hot/idle)
 vmware-privateai pais sizing --model llama-70b               # LLM GPU/storage sizing (no connection)
 vmware-privateai pais bundle-verify <pais.yml>              # local air-gap image inspector (no network)
+vmware-privateai access-info [--tool T] [--target T]         # what may this account do? (root folder)
 ```
 Full list: `references/cli-reference.md`. Per-tool response-token estimates: `references/capabilities.md`.
 

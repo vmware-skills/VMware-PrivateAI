@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import ssl
+import threading
 
 from mcp.server.fastmcp import FastMCP
 
@@ -103,17 +104,27 @@ mcp._mcp_server.version = __version__
 _audit = AuditLogger()
 
 _manager: ConnectionManager | None = None
+# Calls run on worker threads side by side (HLD §16 D-13(2)); two first calls
+# racing here would each build a manager, and one manager's sessions would be
+# orphaned — open logins nobody pools or closes.
+_manager_lock = threading.Lock()
+
+
+def _get_manager() -> ConnectionManager:
+    """The process's one connection manager, built on first use."""
+    global _manager
+    with _manager_lock:
+        if _manager is None:
+            _manager = ConnectionManager.from_config()
+        return _manager
 
 
 def _get_connection(target: str | None):
-    """Lazy connection-manager helper — one manager per process, session per target.
+    """Lazy connection-manager helper — one manager per process, sessions pooled per target.
 
     Returns a pyVmomi ServiceInstance for the target vCenter/ESXi.
     """
-    global _manager
-    if _manager is None:
-        _manager = ConnectionManager.from_config()
-    return _manager.connect(target)
+    return _get_manager().connect(target)
 
 
 def _target_name(target: str | None) -> str:

@@ -20,7 +20,7 @@ PAIS REST API. MCP server + CLI.
 
 ## Upgrading to 2.0
 
-2.0 renames all 17 MCP tools so every name starts with a verb (e.g. `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`). The full old → new table is in
+2.0 renamed every MCP tool it had so every name starts with a verb (e.g. `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`). The full old → new table is in
 [RELEASE_NOTES.md](RELEASE_NOTES.md#v200--mcp-tools-renamed-verb-first). Nothing else changes: same tools, parameters,
 safety gates and CLI commands. If an agent prompt, script or `~/.vmware/rules.yaml` names a tool, update it — though deny
 rules written with the old names keep working with vmware-policy ≥ 1.18 (`vmware-audit policy` lists any rule the
@@ -28,7 +28,7 @@ renames widened), and vmware-pilot ≥ 1.13 translates old names in saved workfl
 If an install older than 2.0 shares that `rules.yaml`, give it vmware-policy ≥ 1.18.2 too: it matches each rule
 against both the old and the new name, so one file serves both.
 
-## Capabilities (17 MCP tools — 16 read / 1 write)
+## Capabilities (18 MCP tools — 17 read / 1 write)
 
 | Category | Tools | Read/Write |
 |----------|-------|:----------:|
@@ -41,6 +41,7 @@ against both the old and the new name, so one file serves both.
 | **Private AI Service** | served models, model catalog, knowledge bases, data sources | 4 read |
 | **PAIS monitoring** | cluster GPU summary (utilization/memory/temperature, hot/idle, busiest) | 1 read |
 | **Sizing & air-gap** | LLM GPU/storage sizing advisor, local pais.yml mirror manifest | 2 read |
+| **Access self-check** | which account the server uses and whether it holds each tool's vSphere privileges (root folder) | 1 read |
 
 Reads are strictly non-destructive. The one write (`assign_vgpu`) previews its blast radius, refuses a powered-on
 VM, **never powers a VM off itself**, double-confirms on the CLI, and is audited to `~/.vmware/audit.db`;
@@ -148,10 +149,9 @@ claude mcp add --transport http vmware-privateai https://mcp.example.com:8443/mc
   before it binds that unauthenticated requests get 401. Use a certificate your clients trust for those names.
 - Behind a TLS-terminating reverse proxy on the same machine use `--transport http --host 127.0.0.1
   --public-name mcp.example.com` and pass the `Authorization` header through.
-- The audit log records each caller as `token:<name>`. Calls naming different targets run in parallel; calls that
-  name no target run one at a time, so name the target when several people share a server.
+- The audit log records each caller as `token:<name>`. Calls run side by side, also on the same target: the server keeps up to `VMWARE_MCP_POOL_SIZE` (default 2) sessions per target, each one a login on that target, and a call waits at most 300 s for a free session (vmware-policy ≥ 1.22.0).
 - **Everyone who can reach the endpoint acts with this server's account.** Tokens identify callers; they grant
-  nothing on the platform. Run one endpoint per privilege level.
+  nothing on the platform. Run one endpoint per privilege level. `vmware-privateai access-info` shows which account that is and what it may do.
 
 **Offer only read tools, plus the writes you choose:**
 

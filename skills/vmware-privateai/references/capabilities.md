@@ -1,6 +1,6 @@
 # vmware-privateai — Capabilities
 
-17 MCP tools (16 read / 1 write) over the vSphere 9.x / VCF 9.1 Web Services API (pyVmomi) plus the
+18 MCP tools (17 read / 1 write) over the vSphere 9.x / VCF 9.1 Web Services API (pyVmomi) plus the
 Private AI Service (PAIS) REST API, with two tools that need no connection at all (sizing / bundle).
 Every vSphere tool accepts an optional `target`; PAIS tools use the `pais:` config section instead.
 Typical response tokens are estimates for a small estate; every `*_list` tool paginates at `limit=50`
@@ -91,6 +91,19 @@ principles heuristic (weights = params × bytes/precision; GPU count = ceil(serv
 explicit that LLM inference is compute/HBM-bound, so random IOPS is the wrong axis for the weights.
 `verify_pais_bundle` parses a **local** pais.yml with a real YAML parser (踩坑 #38) and flags the two
 air-gap blockers (public registries to mirror, mutable tags); it never contacts a registry.
+
+## Access self-check (1 read)
+| Tool | R/W | Returns | ~tokens |
+|------|:---:|---------|:------:|
+| `get_access_info` | R | target, account, privilege states; for one `tool` its requires / verdict / meaning, else every tool grouped by verdict | 150–500 |
+
+Asks vCenter/ESXi about the current session (`AuthorizationManager.HasPrivilegeOnEntities`, System.View
+only, so any account can ask about itself). Checked on the **root folder**: `not_granted_at_root` is not
+"no access" — the privilege may be granted on a cluster, host or VM. `undetermined` is never read as
+granted. The per-tool table is `vmware_privateai/access_requirements.py`, derived from pyVmomi's metadata.
+Two limits: the PAIS tools use a bearer token, not vSphere, so they show as needing no vSphere privilege
+(the token's scope is not checked); and `assign_vgpu`'s device-change privilege is not in pyVmomi's
+metadata, so only its reads are checked. CLI: `vmware-privateai access-info [--tool T] [--target T]`.
 
 ## vGPU assignment (1 write)
 | Tool | R/W | Risk | Blast radius |

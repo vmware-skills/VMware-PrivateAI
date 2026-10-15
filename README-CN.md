@@ -17,13 +17,13 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 
 ## 升级到 2.0
 
-2.0 把全部 17 个 MCP 工具改成动词在前（例如 `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`），完整的新旧名对照表见
+2.0 把当时的全部 MCP 工具改成动词在前（例如 `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`），完整的新旧名对照表见
 [RELEASE_NOTES.md](RELEASE_NOTES.md#v200--mcp-tools-renamed-verb-first)。其他都不变：工具、参数、安全确认门和 CLI 命令都一样。
 如果 agent 提示词、脚本或 `~/.vmware/rules.yaml` 里写了工具名，请改成新名——不过用旧名写的 deny 规则在
 vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改名而多匹配的规则），vmware-pilot ≥ 1.13 也会自动转换已保存工作流里的旧名。
 如果还有 2.0 之前的安装共用这个 `rules.yaml`，请把它的 vmware-policy 也升到 ≥ 1.18.2：它会按新旧两个名字匹配每条规则，一份文件两边都管用。
 
-## 能力(17 个 MCP 工具 —— 16 读 / 1 写)
+## 能力(18 个 MCP 工具 —— 17 读 / 1 写)
 
 | 类别 | 工具 | 读/写 |
 |------|------|:----:|
@@ -36,6 +36,7 @@ vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改�
 | **Private AI Service** | 已服务模型、模型目录、知识库、数据源 列表 | 4 读 |
 | **PAIS 监控** | 集群 GPU 汇总(利用率/显存/温度、热点/空闲、最忙) | 1 读 |
 | **选型与 air-gap** | LLM GPU/存储选型顾问、本地 pais.yml 镜像清单 | 2 读 |
+| **权限自检** | server 使用哪个账号,以及它在根文件夹上是否拥有各工具所需的 vSphere 权限 | 1 读 |
 
 读操作严格无破坏性。唯一的写(`assign_vgpu`)会预览爆炸半径、拒绝已开机虚机、**绝不自行关机**、
 CLI 双重确认、统一审计到 `~/.vmware/audit.db`;可先用 `validate_vgpu_profile` 预检。
@@ -137,10 +138,9 @@ claude mcp add --transport http vmware-privateai https://mcp.example.com:8443/mc
   证书要用客户端信任、且覆盖这些名字的证书。
 - 在同一台机器上由反向代理终结 TLS 时，用 `--transport http --host 127.0.0.1 --public-name mcp.example.com`，
   并让代理透传 `Authorization` 头。
-- 审计日志把每个调用者记为 `token:<名字>`。指定不同 target 的调用并行执行；不指定 target 的调用逐个执行，
-  所以多人共用一个 server 时请写明 target。
+- 审计日志把每个调用者记为 `token:<名字>`。调用并行执行，同一 target 上也一样：server 为每个 target 最多保持 `VMWARE_MCP_POOL_SIZE`（默认 2）个会话，每个会话都是在该 target 上的一次登录；一个调用最多等 300 秒拿到空闲会话（vmware-policy ≥ 1.22.0）。
 - **能连到这个端点的人，都以该 server 配置的账号操作。** token 只用来识别调用者，不在平台上授予任何权限。
-  每个权限级别单独起一个端点。
+  每个权限级别单独起一个端点。`vmware-privateai access-info` 可查看是哪个账号、它能做什么。
 
 **只提供读工具，加上你选定的写工具：**
 

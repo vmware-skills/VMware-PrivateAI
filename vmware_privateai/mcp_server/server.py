@@ -20,6 +20,7 @@ from vmware_policy import (
 
 from vmware_privateai.mcp_server._shared import mcp
 from vmware_privateai.mcp_server.tools import (
+    access,  # noqa: F401  (registers get_access_info — account privileges self-check)
     advisor,  # noqa: F401  (registers sizing / bundle advisor tools — no connection)
     gpu,  # noqa: F401  (registers GPU inventory + host-readiness tools)
     pais,  # noqa: F401  (registers PAIS model/KB/catalog/data-source/monitoring tools)
@@ -122,6 +123,7 @@ def main(
     run_server(
         mcp,
         skill="privateai",
+        pooled=True,
         expose=expose, allow_write=allow_write, transport=transport, host=host, port=port,
         cert=cert, key=key, public_name=public_name, token_file=token_file,
     )

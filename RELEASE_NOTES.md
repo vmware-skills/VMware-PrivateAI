@@ -1,3 +1,22 @@
+## Unreleased — calls run side by side on one target; `get_access_info`
+
+**Concurrent calls (HLD §16 D-13(2)).** On a shared HTTPS server, calls no longer wait for each other:
+
+* Each call holds its own vCenter/ESXi session for as long as it runs, so two calls never share one connection.
+  Calls on the same target, or naming no target, now run side by side.
+* The server keeps up to `VMWARE_MCP_POOL_SIZE` (default 2) sessions per target. Each session is a login on the
+  target. A call waits at most 300 s for a free session, then fails with a message naming the setting.
+* PAIS calls are unchanged: each call already opens its own PAIS client.
+* The CLI and stdio are unchanged: one session per target.
+
+**Check what the account may do (HLD §17 D-17).** New read tool `get_access_info` (CLI: `vmware-privateai
+access-info [--tool NAME] [--target T]`) reports which account the server uses and, per tool, whether it holds the
+vSphere privileges the tool needs on the root folder. `not_granted_at_root` is not "no access"; `undetermined` is
+never read as granted. The PAIS tools use a bearer token, so they show as needing no vSphere privilege, and only
+the reads of `assign_vgpu` are checked. 18 MCP tools (17 read, 1 write).
+
+Requires `vmware-policy>=1.22.0`.
+
 ## v2.2.0 — serve MCP over HTTPS
 
 `vmware-privateai mcp` can now serve the network as well as stdio (HLD §16, via vmware-policy 1.21.0):

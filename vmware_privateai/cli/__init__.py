@@ -11,6 +11,7 @@ from typing import Optional
 import typer
 
 from vmware_privateai import __version__
+from vmware_privateai.cli._common import ConfigOption, TargetOption, cli_errors, console
 from vmware_privateai.cli.gpu import gpu_app
 from vmware_privateai.cli.pais import pais_app
 from vmware_privateai.cli.vgpu import vgpu_app
@@ -68,6 +69,33 @@ def doctor() -> None:
     from vmware_privateai.doctor import run_doctor
 
     raise typer.Exit(0 if run_doctor() else 1)
+
+
+@app.command("access-info")
+@cli_errors
+@audited("get_access_info")
+def access_info(
+    tool: str | None = typer.Option(None, "--tool", help="One MCP tool name; omit for every tool"),
+    target: TargetOption = None,
+    config: ConfigOption = None,
+) -> None:
+    """Show which account is used on a target and whether it holds each tool's privileges.
+
+    Checked on the root folder: not_granted_at_root may still be granted on a cluster, host or VM.
+    """
+    import json
+    from pathlib import Path
+
+    from vmware_policy.access import vsphere_access_info
+
+    from vmware_privateai.access_requirements import REQUIREMENTS
+    from vmware_privateai.config import load_config
+    from vmware_privateai.connection import ConnectionManager
+
+    mgr = ConnectionManager.from_config(load_config(Path(config)) if config else None)
+    name = mgr.resolve_target_name(target)
+    result = vsphere_access_info(mgr.connect(name), target=name, requirements=REQUIREMENTS, tool=tool)
+    console.print_json(json.dumps(result))
 
 
 @app.command()

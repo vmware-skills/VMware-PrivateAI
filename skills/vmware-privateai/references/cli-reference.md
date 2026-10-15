@@ -12,7 +12,12 @@ options rather than paging the whole estate.
 vmware-privateai version          # print the installed version
 vmware-privateai mcp              # run the stdio MCP server (used by MCP clients)
 vmware-privateai --help           # list command groups: gpu, vgpu, pais
+vmware-privateai access-info [--tool assign_vgpu] [--target T] [--config PATH]
+                                  # account in use + each tool's vSphere privileges (root folder)
 ```
+
+`access-info` prints the same JSON as the `get_access_info` MCP tool. `not_granted_at_root` may still be
+granted on a cluster, host or VM; `undetermined` is never read as granted.
 
 > The `mcp` subcommand is the recommended MCP entry point — it is an installed console script, so it
 > never re-resolves from PyPI the way `uvx` does (踩坑 #25: `uvx` is fragile behind an enterprise TLS
