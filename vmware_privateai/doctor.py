@@ -94,7 +94,12 @@ def run_doctor() -> bool:
                     )
                     mgr.disconnect(name)
                 except Exception as exc:  # noqa: BLE001 — the failure is the answer
-                    results.append(_check(f"vCenter '{name}' reachable", False, str(exc)[:80]))
+                    # The no-role message whole: the 80-character cut keeps "no session"
+                    # and drops the role (AIops#47). By name, because the import of
+                    # connection (pyVmomi) is itself inside this try.
+                    whole = type(exc).__name__ == "NoVsphereRoleError"
+                    detail = str(exc) if whole else str(exc)[:80]
+                    results.append(_check(f"vCenter '{name}' reachable", False, detail))
         except Exception as exc:  # noqa: BLE001
             results.append(_check("Config loads", False, str(exc)[:80]))
 

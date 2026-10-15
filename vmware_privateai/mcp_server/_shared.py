@@ -15,7 +15,7 @@ from mcp.server.fastmcp import FastMCP
 
 from vmware_privateai import __version__
 from vmware_privateai.config import AppConfig, ConfigError, load_config
-from vmware_privateai.connection import ConnectionManager
+from vmware_privateai.connection import NOT_AUTHENTICATED_HINT, ConnectionManager
 from vmware_privateai.notify.audit import AuditLogger
 from vmware_privateai.ops._errors import PrivateAiError
 
@@ -148,5 +148,11 @@ def _safe_error(exc: Exception, tool: str) -> str:
         return f"{tool} failed: a TLS/certificate error occurred (see server log)."
     if isinstance(exc, (PrivateAiError, ConfigError, FileNotFoundError, ConnectionError, ValueError)):
         return str(exc)
+    from pyVmomi import vim
+
+    if isinstance(exc, vim.fault.NotAuthenticated):
+        # Session expired, or the account has no vSphere role (AIops#47).
+        logger.warning("NotAuthenticated in tool %s", tool)
+        return NOT_AUTHENTICATED_HINT
     logger.exception("Unexpected error in tool %s", tool)
     return f"{tool} failed: an unexpected error occurred (see server log)."

@@ -21,7 +21,7 @@ from vmware_policy import (
 )
 
 from vmware_privateai.config import ConfigError, load_config
-from vmware_privateai.connection import ConnectionManager
+from vmware_privateai.connection import NOT_AUTHENTICATED_HINT, ConnectionManager
 from vmware_privateai.notify.audit import AuditLogger
 from vmware_privateai.ops._errors import PrivateAiError
 
@@ -74,6 +74,14 @@ def cli_errors(fn: Callable) -> Callable:
             raise typer.Exit(1) from None
         except (ConfigError, PrivateAiError, FileNotFoundError, ConnectionError, ValueError) as exc:
             console.print(f"[red]error:[/] {exc}")
+            raise typer.Exit(1) from None
+        except Exception as exc:
+            from pyVmomi import vim
+
+            if not isinstance(exc, vim.fault.NotAuthenticated):
+                raise
+            # Session expired, or the account has no vSphere role (AIops#47).
+            console.print(f"[red]error:[/] {NOT_AUTHENTICATED_HINT}")
             raise typer.Exit(1) from None
 
     return wrapper

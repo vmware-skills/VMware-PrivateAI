@@ -206,6 +206,10 @@ Full list: `references/cli-reference.md`. Per-tool response-token estimates: `re
   The `<T>` is the target name upper-cased with `-`→`_`.
 - **`TLS verification failed for target '<t>'`** — for a self-signed lab set `verify_ssl: false` for
   that target in `config.yaml`; otherwise install the vCenter CA on this host.
+- **`doctor` says "no vSphere role", or every command fails with "session is not authenticated"** — the
+  password is right but the account has no vSphere role, so vCenter shows no session for it. Assign one
+  (Read-Only or higher) on the vCenter root folder (Administration > Access Control > Global Permissions).
+  Mid-run, the same fault can be an expired session: run the command again.
 - **`gpu host-list` returns nothing on a cluster you know has GPUs** — only `shared` / `direct` /
   `sharedDirect` graphics types count as compute GPUs (the plain host framebuffer is excluded). If real
   9.x hardware surfaces a GPU under an unexpected type, that is a beta known-limitation — file an issue
