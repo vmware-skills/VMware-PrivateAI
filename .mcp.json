@@ -5,7 +5,7 @@
       "command": "uvx",
       "args": [
         "--from",
-        "vmware-privateai==2.3.0",
+        "vmware-privateai==2.3.1",
         "vmware-privateai-mcp"
       ]
     }
