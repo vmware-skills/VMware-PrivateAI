@@ -38,10 +38,15 @@ def _config() -> AppConfig:
 
 @pytest.fixture
 def role_less(monkeypatch):
-    """SmartConnect logs in, but vCenter shows no session for the account."""
+    """SmartConnect logs in, but the account can read nothing.
+
+    Both signals the policy requires: vCenter shows no session for the account,
+    and a container view on the root folder is refused with NotAuthenticated.
+    """
     monkeypatch.setenv("VMWARE_PRIVATEAI_LAB_PASSWORD", "pw")
     si = MagicMock(name="si")
     si.content.sessionManager.currentSession = None
+    si.content.viewManager.CreateContainerView.side_effect = vim.fault.NotAuthenticated()
     with (
         patch("pyVim.connect.SmartConnect", return_value=si) as smart,
         patch("pyVim.connect.Disconnect") as dis,
@@ -79,6 +84,23 @@ def test_normal_login_is_unaffected(monkeypatch):
         assert mgr.connect("lab") is si
         assert mgr.list_connected() == ["lab"]
         dis.assert_not_called()
+        mgr.disconnect_all()
+
+
+def test_scoped_account_without_a_session_still_connects(monkeypatch):
+    """``currentSession`` alone is not a verdict: a readable root view lets it through."""
+    monkeypatch.setenv("VMWARE_PRIVATEAI_LAB_PASSWORD", "pw")
+    si = MagicMock(name="si")
+    si.content.sessionManager.currentSession = None  # the root view below opens
+    mgr = ConnectionManager(_config())
+    with patch("pyVim.connect.SmartConnect", return_value=si), patch(
+        "pyVim.connect.Disconnect"
+    ) as dis:
+        assert mgr.connect("lab") is si  # no NoVsphereRoleError
+        assert mgr.list_connected() == ["lab"]  # cached like any session
+        dis.assert_not_called()
+        view = si.content.viewManager.CreateContainerView.return_value
+        view.Destroy.assert_called_once_with()  # the probe leaves no view behind
         mgr.disconnect_all()
 
 

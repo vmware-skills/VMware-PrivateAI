@@ -3,6 +3,9 @@
 * An account that logs in but has no vSphere role (vCenter shows no session for it) is now refused at connect time
   with a message naming the missing role (assign Read-Only or higher), on `doctor`'s "vCenter reachable" row (shown
   whole, not cut at 80 characters), the CLI and every MCP tool. The session is logged out and never cached.
+* Refused only when two signals agree: no session, **and** vCenter refuses a view of the root folder
+  (`NotAuthenticated` / `NoPermission`). An account scoped to one folder can also show no session, and still
+  connects; anything the check cannot read lets the login through.
 * `NotAuthenticated` raised later (session expired, or a role removed while running) now says both causes, on the
   CLI (it was a raw traceback) and over MCP (it was "an unexpected error occurred").
 * Requires vmware-policy 1.23.0.
