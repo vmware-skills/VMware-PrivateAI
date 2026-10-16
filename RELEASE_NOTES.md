@@ -1,3 +1,10 @@
+## Unreleased — tools may not touch this server's own control files
+
+* **Security fix (HLD §18 step 0).** the `verify_pais_bundle` manifest path could name this server's own files, so over HTTPS a token holder could
+  overwrite `$OPS_HOME/mcp-tokens` or `rules.yaml`, or read a skill's `.env`. A path that resolves into `$OPS_HOME`,
+  a `~/.vmware-*` directory, a `VMWARE_*_CONFIG` directory, or the server's token file or TLS key/certificate is now
+  refused before anything is read or written. Needs vmware-policy 1.23.1.
+
 ## v2.3.1 — a login with no vSphere role is named as such (AIops#47)
 
 * An account that logs in but has no vSphere role (vCenter shows no session for it) is now refused at connect time

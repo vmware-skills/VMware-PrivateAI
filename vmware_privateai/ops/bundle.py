@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from vmware_policy.hostpaths import check_host_path
 
 from vmware_privateai.ops._errors import PrivateAiError
 from vmware_privateai.ops._sanitize import _sanitize
@@ -149,6 +150,7 @@ def inspect_bundle(manifest_path: str) -> dict:
     mirror, and warnings for mutable tags and public registries. Never contacts a registry —
     a wrong/missing path returns a teaching error, not a traceback.
     """
+    check_host_path(manifest_path)  # never this server's own files (HLD §18 step 0)
     path = Path(manifest_path).expanduser()
     if not path.exists():
         raise PrivateAiError(
