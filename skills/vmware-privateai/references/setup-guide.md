@@ -10,7 +10,7 @@ Install, credential, and MCP-client configuration for vmware-privateai, plus the
 ## 1. Install
 
 ```bash
-uv tool install vmware-privateai==2.3.2       # isolated tool env; puts vmware-privateai on PATH
+uv tool install vmware-privateai==2.4.0       # isolated tool env; puts vmware-privateai on PATH
 vmware-privateai version
 ```
 
@@ -91,7 +91,7 @@ Fallback (`uvx` — re-resolves from PyPI each start; if your network runs a TLS
   "mcpServers": {
     "vmware-privateai": {
       "command": "uvx",
-      "args": ["--from", "vmware-privateai==2.3.2", "vmware-privateai-mcp"],
+      "args": ["--from", "vmware-privateai==2.4.0", "vmware-privateai-mcp"],
       "env": { "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml" }
     }
   }
@@ -163,6 +163,7 @@ vmware-privateai mcp --transport https --host 0.0.0.0 --port 8443 \
 - **Everyone who can reach the endpoint acts with this server's account.** Tokens identify callers; they grant
   nothing on the platform. Run one endpoint per privilege level (for example a read-only account behind
   `--expose read`, and a separate endpoint for operators).
+- **Several people or roles on one endpoint:** give each token a role (`vmware-audit token create NAME --role reader`, or a role in `roles.yaml` naming tools and targets; vmware-policy ≥ 1.24.0). A role limits what the token may call on this endpoint; it cannot grant more than the account has. See vmware-policy's README, "Roles for network callers".
 
 ## 5. Verify
 
