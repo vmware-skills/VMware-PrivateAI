@@ -1,6 +1,6 @@
 {
   "name": "@zw008/vmware-privateai",
-  "version": "2.4.0",
+  "version": "2.4.2",
   "description": "VMware Private AI (NVIDIA): GPU inventory, vGPU profiles, utilization, model serving — 18 tools",
   "private": true,
   "license": "MIT",
