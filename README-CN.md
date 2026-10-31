@@ -2,6 +2,8 @@
 
 # VMware Private AI(Foundation with NVIDIA)—— GPU 与模型服务运维
 
+要用自己的模型和 Agent 平台进行只读自测，请看 marketplace 根目录的[共享模型适配自测任务](https://github.com/vmware-skills/marketplace/blob/main/MODEL_FIT_SELF_TEST.md)。
+
 VMware skill 家族的 **GPU / AI 基础设施** 视角 —— GPU 主机与设备清点、vGPU 消费者、实时 GPU 利用率、
 vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)** 的已服务模型与知识库,
 覆盖 **vSphere 9.x / VCF 9.1** Web Services API(pyVmomi)与 PAIS REST API。MCP server + CLI。
