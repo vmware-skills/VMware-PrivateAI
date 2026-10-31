@@ -2,6 +2,8 @@
 
 # VMware Private AI (Foundation with NVIDIA) — GPU & Model-Serving Ops
 
+For a read-only check of this skill with your model and agent host, use the shared [model-fit self-test](https://github.com/vmware-skills/marketplace/blob/main/MODEL_FIT_SELF_TEST.md) in the marketplace root.
+
 The **GPU / AI-infrastructure** lens of the VMware skill family — GPU host and device inventory, vGPU consumers,
 live GPU utilization, the vGPU / DirectPath profile catalog, vGPU assignment, and the models and knowledge bases
 served by **Private AI Service (PAIS)** — over the **vSphere 9.x / VCF 9.1** Web Services API (pyVmomi) and the

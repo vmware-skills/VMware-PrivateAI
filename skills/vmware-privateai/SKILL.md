@@ -21,6 +21,8 @@ metadata: {"openclaw":{"requires":{"anyBins":["vmware-privateai","uvx"]},"option
 
 # VMware Private AI (Foundation with NVIDIA) — GPU & Model-Serving Ops
 
+> Self-test: [guide](https://github.com/vmware-skills/marketplace/blob/main/MODEL_FIT_SELF_TEST.md).
+
 > **Disclaimer**: Community-maintained open-source project, **not affiliated with, endorsed by, or
 > sponsored by VMware, Inc., Broadcom Inc., or NVIDIA Corporation.** "VMware", "vSphere", and "VCF"
 > are trademarks of Broadcom; "NVIDIA" and "vGPU" are trademarks of NVIDIA. Source is publicly
