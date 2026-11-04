@@ -16,7 +16,7 @@ PAIS REST API. MCP server + CLI.
 
 > **Status: beta.** Skill #15 of the family, on its own version line. Every API path is verified against official
 > Broadcom/NVIDIA docs before use (see `tests/eval/spec/privateai_endpoints.py`) — no endpoints written from memory.
-> GET response **field names** and the exact PAIS paths are defensive and await validation on real 9.x hardware
+> GET response **field names** and some PAIS paths remain defensive and await validation on real 9.x hardware
 > (see the beta caveats in `skills/vmware-privateai/SKILL.md`). Governed by the family harness (audit + policy +
 > teaching errors); read/write authorization is left to the RBAC role of the vCenter service account.
 
@@ -30,7 +30,7 @@ renames widened), and vmware-pilot ≥ 1.13 translates old names in saved workfl
 If an install older than 2.0 shares that `rules.yaml`, give it vmware-policy ≥ 1.18.2 too: it matches each rule
 against both the old and the new name, so one file serves both.
 
-## Capabilities (18 MCP tools — 17 read / 1 write)
+## Capabilities (20 MCP tools — 19 read / 1 write)
 
 | Category | Tools | Read/Write |
 |----------|-------|:----------:|
@@ -41,6 +41,7 @@ against both the old and the new name, so one file serves both.
 | **Profile validation** | read-only pre-check before changing a vGPU profile (power state + whether the host offers it) | 1 read |
 | **vGPU assignment** | set a VM's vGPU profile (the VM must be powered off) | 1 write |
 | **Private AI Service** | served models, model catalog, knowledge bases, data sources | 4 read |
+| **PAIS MCP gallery** | registered MCP servers, tool approval and availability | 2 read |
 | **PAIS monitoring** | cluster GPU summary (utilization/memory/temperature, hot/idle, busiest) | 1 read |
 | **Sizing & air-gap** | LLM GPU/storage sizing advisor, local pais.yml mirror manifest | 2 read |
 | **Access self-check** | which account the server uses and whether it holds each tool's vSphere privileges (root folder) | 1 read |
@@ -55,6 +56,12 @@ several VMs, and a VM whose power state or devices cannot be read.
 `get_pais_model_catalog` / `list_pais_data_sources` use unconfirmed PAIS control-plane paths (pitfall #36: a 404
 returns a base-URL teaching hint and is not a bug); `advise_pais_sizing` / `verify_pais_bundle` need no connection
 (pure computation / local file parsing).
+`list_pais_mcp_servers` and `list_pais_mcp_tools` use routes documented in the
+[official PAIS MCP API](https://developer.broadcom.com/xapis/vmware-private-ai-service-api/latest/mcp-servers/).
+They return bounded names, availability and approval state, not server URLs,
+headers or raw tool schemas. PAIS approval controls gallery visibility; the
+underlying VMware Policy and product RBAC still decide what a caller may do.
+These routes have not been tested against a live PAIS appliance.
 
 ## Quick Start
 
@@ -98,6 +105,15 @@ vmware-privateai pais kb-list
 *Failure branch*: HTTP 404 is usually a base-URL mismatch (the `/api/v1` prefix varies by deployment and is
 unconfirmed in beta) — check `pais.endpoint`; HTTP 401/403 means `VMWARE_PRIVATEAI_PAIS_TOKEN` expired or lacks
 permission — fetch a new token.
+
+**4. Inspect PAIS MCP registrations and approvals (read-only)**
+```bash
+vmware-privateai pais mcp-servers
+vmware-privateai pais mcp-tools --server-id <PAIS_SERVER_ID>
+```
+Use `--after <cursor>` when a page prints `next --after`. These commands do
+not register or approve tools and cannot prove a backend caller is authorized.
+Live PAIS response behavior still needs validation.
 
 ## Companion Skills
 - [vmware-aiops](https://github.com/vmware-skills/VMware-AIops) — the vCenter VMs behind AI workloads (power/snapshot/clone/migrate)

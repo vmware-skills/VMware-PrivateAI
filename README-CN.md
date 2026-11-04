@@ -14,7 +14,7 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 
 > **状态:beta。** 家族第 15 个 skill,走独立版本线。每条 API 路径在使用前都对照官方
 > Broadcom/NVIDIA 资料核实(见 `tests/eval/spec/privateai_endpoints.py`)——不凭记忆编写端点。GET 响应
-> **字段名** 与 PAIS 的确切路径为防御式,待真机 9.x 硬件验证(见 `skills/vmware-privateai/SKILL.md` 里的 beta 活口)。由家族 harness 治理
+> **字段名** 与部分 PAIS 路径为防御式,待真机 9.x 硬件验证(见 `skills/vmware-privateai/SKILL.md` 里的 beta 活口)。由家族 harness 治理
 > (审计 + 策略 + 教学性错误);读写授权交由 vCenter 服务账号的 RBAC 角色。
 
 ## 升级到 2.0
@@ -25,7 +25,7 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改名而多匹配的规则），vmware-pilot ≥ 1.13 也会自动转换已保存工作流里的旧名。
 如果还有 2.0 之前的安装共用这个 `rules.yaml`，请把它的 vmware-policy 也升到 ≥ 1.18.2：它会按新旧两个名字匹配每条规则，一份文件两边都管用。
 
-## 能力(18 个 MCP 工具 —— 17 读 / 1 写)
+## 能力(20 个 MCP 工具 —— 19 读 / 1 写)
 
 | 类别 | 工具 | 读/写 |
 |------|------|:----:|
@@ -36,6 +36,7 @@ vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改�
 | **配置校验** | 改 vGPU 配置前只读预检(电源态 + 主机是否提供) | 1 读 |
 | **vGPU 分配** | 设置虚机 vGPU 配置(虚机须已关机) | 1 写 |
 | **Private AI Service** | 已服务模型、模型目录、知识库、数据源 列表 | 4 读 |
+| **PAIS MCP 工具目录** | 已注册 MCP 服务、工具批准状态与可用性 | 2 读 |
 | **PAIS 监控** | 集群 GPU 汇总(利用率/显存/温度、热点/空闲、最忙) | 1 读 |
 | **选型与 air-gap** | LLM GPU/存储选型顾问、本地 pais.yml 镜像清单 | 2 读 |
 | **权限自检** | server 使用哪个账号,以及它在根文件夹上是否拥有各工具所需的 vSphere 权限 | 1 读 |
@@ -47,6 +48,10 @@ CLI 双重确认、统一审计到 `~/.vmware/audit.db`;可先用 `validate_vgpu
 多台虚机同名、电源状态或设备列表读不到时,`confirm=true` 会被拒绝。
 `get_pais_model_catalog` / `list_pais_data_sources` 走未确认的 PAIS 控制面路径(踩坑 #36:404 返回 base-URL
 教学提示,不当 bug);`advise_pais_sizing` / `verify_pais_bundle` 无需连接(纯计算 / 本地文件解析)。
+`list_pais_mcp_servers` 与 `list_pais_mcp_tools` 使用[官方 PAIS MCP API](https://developer.broadcom.com/xapis/vmware-private-ai-service-api/latest/mcp-servers/)
+公开的路径；只返回有界的名称、可用性和批准状态，不返回服务 URL、请求头或原始工具 schema。
+PAIS 批准控制目录可见性，后端 VMware Policy 与产品 RBAC 仍决定实际权限。这两个路径尚未在
+真实 PAIS 设备上验证。
 
 ## 快速开始
 
@@ -87,6 +92,14 @@ vmware-privateai pais kb-list
 ```
 *失败分支*:HTTP 404 通常是 base-URL 不匹配(`/api/v1` 前缀随部署而异、beta 未确认),查 `pais.endpoint`;
 HTTP 401/403 表示 `VMWARE_PRIVATEAI_PAIS_TOKEN` 过期或缺权限,重新取 token。
+
+**4. 查看 PAIS MCP 注册与批准状态（只读）**
+```bash
+vmware-privateai pais mcp-servers
+vmware-privateai pais mcp-tools --server-id <PAIS_SERVER_ID>
+```
+若页面打印 `next --after`，可用 `--after <游标>` 取下一页。这些命令不注册或批准工具，
+也不能证明后端调用者有权限；真实 PAIS 响应仍待验证。
 
 ## Companion Skills
 - [vmware-aiops](https://github.com/vmware-skills/VMware-AIops) —— AI 负载背后的 vCenter 虚机(开关机/快照/克隆/迁移)

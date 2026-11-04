@@ -1,6 +1,12 @@
-## Unreleased — dependency security
+## Unreleased — dependency security and PAIS MCP gallery
 
 * Require certifi 2026.10.19 or later (GHSA-6q48-6c7w-9gw2) and PyJWT 2.15.1 or later (the 2.13 and 2.14 security advisories) for the MCP HTTP/auth dependency chain. The development lock resolves those safe versions.
+* Added read-only `list_pais_mcp_servers` and `list_pais_mcp_tools` (CLI:
+  `pais mcp-servers` / `pais mcp-tools`) using the official PAIS MCP gallery
+  list routes. Responses omit URLs, headers, descriptions and raw schemas;
+  malformed or incomplete pages never imply an empty registry. Approval state
+  is visibility metadata, not a backend authorization grant. The API contract
+  is covered by synthetic tests; live PAIS compatibility remains unverified.
 
 ## v2.4.2 — a login refused for lack of a vSphere role says so (2026-10-19)
 

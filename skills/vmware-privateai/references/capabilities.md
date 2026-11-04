@@ -1,10 +1,11 @@
 # vmware-privateai — Capabilities
 
-18 MCP tools (17 read / 1 write) over the vSphere 9.x / VCF 9.1 Web Services API (pyVmomi) plus the
+20 MCP tools (19 read / 1 write) over the vSphere 9.x / VCF 9.1 Web Services API (pyVmomi) plus the
 Private AI Service (PAIS) REST API, with two tools that need no connection at all (sizing / bundle).
 Every vSphere tool accepts an optional `target`; PAIS tools use the `pais:` config section instead.
-Typical response tokens are estimates for a small estate; every `*_list` tool paginates at `limit=50`
-and returns the `{items, returned, limit, offset, total, truncated, hint}` envelope.
+Typical response tokens are estimates for a small estate; inventory list tools paginate at `limit=50`
+and return the `{items, returned, limit, offset, total, truncated, hint}` envelope.
+The MCP gallery uses PAIS server-side cursors and reports `next_after` instead of `offset`.
 
 ## GPU inventory (4 read)
 | Tool | R/W | Returns | ~tokens |
@@ -56,13 +57,15 @@ Read-only pre-flight for `assign_vgpu`: checks the two ReconfigVM failure modes 
 on, or the VM's own host does not offer the target profile. No reconfigure; run `assign_vgpu` once
 `can_apply` is true.
 
-## Private AI Service (4 read)
+## Private AI Service (6 read)
 | Tool | R/W | Returns | ~tokens |
 |------|:---:|---------|:------:|
 | `list_pais_models` | R | id, owned_by, created — OpenAI-compatible served `/models` (filter name) | 60–400 |
 | `get_pais_model_catalog` | R | id, name, status, source — deployable/approved model catalog (filter name) | 60–500 |
 | `list_pais_knowledge_bases` | R | id, name, status, description — RAG knowledge bases (filter name) | 80–500 |
 | `list_pais_data_sources` | R | id, name, type, status — RAG ingest connectors (filter name) | 60–400 |
+| `list_pais_mcp_servers` | R | registered server ID/name, transport, availability; PAIS cursor pagination | 60–400 |
+| `list_pais_mcp_tools` | R | tool/server ID/name, approval, availability, linked agent count; no raw schema | 80–500 |
 
 PAIS reads go through the bearer-authenticated REST client (`VMWARE_PRIVATEAI_PAIS_TOKEN`). Responses
 are parsed defensively: a bare JSON array or a `{data|items|models|knowledge_bases|…: [...]}` envelope is
@@ -70,6 +73,11 @@ accepted, and every field degrades via `.get()`. **Beta caveat**: the exact `/ap
 the JSON field names are `INFERRED_EXACT` (corroborated by the rendered Broadcom developer portal, not a
 downloaded OpenAPI or a live deployment) — a 404 usually means a base-URL mismatch, not a bug.
 `get_pais_model_catalog` (`/api/v1/control/models`) is the least-confirmed of these (a best-guess path).
+The MCP gallery routes are documented in the current PAIS API, but have not
+been checked on a live appliance. Their `next_after` cursor and `truncated`
+flag report server-side pagination; `total` stays null because this tool does
+not request an expensive total count. A malformed response is `unmeasured`,
+not an empty gallery. Gallery approval never bypasses backend Policy or RBAC.
 
 ## PAIS monitoring (1 read)
 | Tool | R/W | Returns | ~tokens |

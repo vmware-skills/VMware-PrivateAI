@@ -43,6 +43,8 @@ REQUIREMENTS: dict[str, list[str]] = {
     "list_pais_knowledge_bases": [],
     "get_pais_model_catalog": [],
     "list_pais_data_sources": [],
+    "list_pais_mcp_servers": [],
+    "list_pais_mcp_tools": [],
     "get_pais_monitoring_summary": list(_READ),  # vSphere perf counters, not PAIS
     "list_vgpu_profiles": list(_READ),
     "list_directpath_profiles": list(_READ),
