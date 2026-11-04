@@ -1,3 +1,7 @@
+## Unreleased — dependency security
+
+* Require certifi 2026.10.19 or later (GHSA-6q48-6c7w-9gw2) and PyJWT 2.15.1 or later (the 2.13 and 2.14 security advisories) for the MCP HTTP/auth dependency chain. The development lock resolves those safe versions.
+
 ## v2.4.2 — a login refused for lack of a vSphere role says so (2026-10-19)
 
 (2.4.1 was not used for this package; this release follows 2.4.0.)
