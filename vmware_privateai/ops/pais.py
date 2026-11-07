@@ -14,6 +14,7 @@ envelopes are accepted, and every field degrades via ``.get`` (踩坑 形态 #1)
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlencode
 
 from vmware_privateai.ops._paging import envelope
 from vmware_privateai.ops._sanitize import _sanitize
@@ -24,13 +25,102 @@ _MODELS_PATH = "/api/v1/compatibility/openai/v1/models"
 _KNOWLEDGE_BASES_PATH = "/api/v1/control/knowledge-bases"
 _MODEL_CATALOG_PATH = "/api/v1/control/models"
 _DATA_SOURCES_PATH = "/api/v1/control/data-sources"
+_MCP_SERVERS_PATH = "/api/v1/control/mcp-servers"
+_MCP_TOOLS_PATH = "/api/v1/control/mcp-servers/tools"
 PAIS_PATHS_USED: frozenset[str] = frozenset(
-    {_MODELS_PATH, _KNOWLEDGE_BASES_PATH, _MODEL_CATALOG_PATH, _DATA_SOURCES_PATH}
+    {_MODELS_PATH, _KNOWLEDGE_BASES_PATH, _MODEL_CATALOG_PATH, _DATA_SOURCES_PATH,
+     _MCP_SERVERS_PATH, _MCP_TOOLS_PATH}
 )
 # Spec keys — asserted ⊆ PAIS_ENDPOINTS by the gate.
 PAIS_KEYS_USED: frozenset[str] = frozenset(
-    {"list_models", "list_knowledge_bases", "list_model_catalog", "list_data_sources"}
+    {"list_models", "list_knowledge_bases", "list_model_catalog", "list_data_sources",
+     "list_pais_mcp_servers", "list_pais_mcp_tools"}
 )
+
+
+def _gallery_query(limit: int, after: str | None, **filters: object) -> str:
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 100:
+        raise ValueError("limit must be between 1 and 100")
+    if after is not None and (not isinstance(after, str) or not 1 <= len(after) <= 128):
+        raise ValueError("after must be a nonempty cursor of at most 128 characters")
+    params: list[tuple[str, str]] = [("limit", str(limit))]
+    if after is not None:
+        params.append(("after", after))
+    for key, value in filters.items():
+        if value is not None:
+            params.append((key, str(value).lower() if isinstance(value, bool) else str(value)))
+    return urlencode(params)
+
+
+def _gallery_page(payload: Any, limit: int, project) -> dict:
+    """Keep PAIS cursor semantics; malformed bodies cannot mean an empty fleet."""
+    if (not isinstance(payload, dict) or not isinstance(payload.get("data"), list)
+            or not all(isinstance(row, dict) for row in payload["data"])
+            or not isinstance(payload.get("has_more"), bool)):
+        return {"items": [], "returned": 0, "limit": limit, "total": None,
+                "truncated": None, "next_after": None, "status": "unmeasured",
+                "hint": "PAIS MCP gallery response shape was not recognized; no empty-inventory conclusion."}
+    rows = [project(row) for row in payload["data"][:limit]]
+    over_limit = len(payload["data"]) > limit
+    has_more = payload["has_more"] or over_limit
+    # An appliance that ignores limit may return a cursor beyond the displayed
+    # rows. Do not offer a cursor that would silently skip those records.
+    cursor = payload.get("last_id") if has_more and not over_limit else None
+    if not isinstance(cursor, str) or not cursor:
+        cursor = None
+    # PAIS only populates num_objects when requested; avoid a false zero.
+    return {"items": rows, "returned": len(rows), "limit": limit, "total": None,
+            "truncated": has_more, "next_after": _sanitize(cursor, 128) if cursor else None,
+            "status": "measured" if not has_more or cursor else "partial",
+            "hint": ("PAIS reports more entries; pass next_after to continue."
+                     if cursor else "PAIS reports more entries but returned no cursor; listing is incomplete."
+                     if has_more else None),
+            "scope_note": (
+                "PAIS tool approval is not backend authorization; "
+                "VMware Policy and product RBAC still apply."
+            )}
+
+
+def list_pais_mcp_servers(client: PaisClient, *, limit: int = 50, after: str | None = None) -> dict:
+    """List registered PAIS MCP servers without returning URLs or headers."""
+    payload = client.get_json(f"{_MCP_SERVERS_PATH}?{_gallery_query(limit, after)}")
+
+    def project(row: dict) -> dict:
+        return {key: _sanitize(row.get(key), 160) for key in
+                ("id", "name", "transport", "availability")}
+
+    return _gallery_page(payload, limit, project)
+
+
+def list_pais_mcp_tools(
+    client: PaisClient, *, server_id: str | None = None,
+    is_approved: bool | None = None, limit: int = 50, after: str | None = None,
+) -> dict:
+    """List PAIS gallery tool names and approval state, excluding raw schemas."""
+    if server_id is not None and (not isinstance(server_id, str) or not 1 <= len(server_id) <= 128):
+        raise ValueError("server_id must be a nonempty ID of at most 128 characters")
+    if is_approved is not None and not isinstance(is_approved, bool):
+        raise ValueError("is_approved must be true, false or null")
+    payload = client.get_json(
+        f"{_MCP_TOOLS_PATH}?{_gallery_query(limit, after, server=server_id, is_approved=is_approved)}"
+    )
+
+    def project(row: dict) -> dict:
+        server = row.get("server") if isinstance(row.get("server"), dict) else {}
+        approved = row.get("is_approved")
+        linked = row.get("num_linked_agents")
+        return {"id": _sanitize(row.get("id"), 160),
+                "server_id": _sanitize(server.get("id"), 160),
+                "server_name": _sanitize(server.get("name"), 160),
+                "name": _sanitize(row.get("origin_name"), 160),
+                "is_approved": approved if isinstance(approved, bool) else None,
+                "availability": _sanitize(row.get("availability"), 80),
+                "linked_agents": (
+                    linked if isinstance(linked, int) and not isinstance(linked, bool) and linked >= 0
+                    else None
+                )}
+
+    return _gallery_page(payload, limit, project)
 
 
 def _as_rows(payload: Any, *keys: str) -> list:

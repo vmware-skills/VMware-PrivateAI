@@ -1,4 +1,4 @@
-"""CLI: Private AI Service (PAIS) reads — model-list, kb-list.
+"""CLI: Private AI Service (PAIS) reads — models, knowledge, MCP gallery.
 
 These talk to the PAIS REST endpoint (config.yaml 'pais:' section) with the bearer token in
 VMWARE_PRIVATEAI_PAIS_TOKEN — separate from the vCenter connection.
@@ -9,11 +9,12 @@ from __future__ import annotations
 from typing import Annotated
 
 import typer
-
-from vmware_privateai.cli._common import ConfigOption, TargetOption, _get_connection, cli_errors, console
+from rich.markup import escape
 from vmware_policy import audited, cli_local
 
-pais_app = typer.Typer(help="Private AI Service: models, knowledge bases, monitoring, sizing, air-gap.")
+from vmware_privateai.cli._common import ConfigOption, TargetOption, _get_connection, cli_errors, console
+
+pais_app = typer.Typer(help="Private AI Service: models, knowledge bases, MCP gallery, monitoring, sizing, air-gap.")
 
 
 def _client(config: str | None):
@@ -100,6 +101,63 @@ def pais_data_source_list_cmd(
         console.print(f"  [cyan]{d['name'] or d['id']}[/]  type={d['type'] or '-'}  status={d['status'] or '-'}")
     if out["truncated"]:
         console.print(f"  [dim]{out['hint']}[/]")
+
+
+@pais_app.command("mcp-servers")
+@cli_errors
+@audited("list_pais_mcp_servers")
+def pais_mcp_servers_cmd(
+    limit: Annotated[int, typer.Option("--limit", help="PAIS page size, 1-100")] = 50,
+    after: Annotated[str, typer.Option("--after", help="Cursor from the preceding page")] = "",
+    config: ConfigOption = None,
+) -> None:
+    """List PAIS MCP registrations (read-only; omits URLs and headers)."""
+    from vmware_privateai.ops.pais import list_pais_mcp_servers
+
+    with _client(config) as client:
+        out = list_pais_mcp_servers(client, limit=limit, after=after or None)
+    console.print(f"\n[bold cyan]PAIS MCP servers ({out['returned']} on this page):[/]")
+    for item in out["items"]:
+        name = escape(item["name"] or item["id"])
+        item_id = escape(item["id"])
+        availability = escape(item["availability"] or "-")
+        console.print(
+            f"  [cyan]{name}[/]  id={item_id}  availability={availability}"
+        )
+    if out.get("hint"):
+        console.print(f"  [dim]{out['hint']}[/]")
+    if out.get("next_after"):
+        console.print(f"  [dim]next --after {escape(out['next_after'])}[/]")
+
+
+@pais_app.command("mcp-tools")
+@cli_errors
+@audited("list_pais_mcp_tools")
+def pais_mcp_tools_cmd(
+    server_id: Annotated[str, typer.Option("--server-id", help="PAIS MCP server ID")] = "",
+    approved: Annotated[bool, typer.Option("--approved", help="Show approved tools only")] = False,
+    limit: Annotated[int, typer.Option("--limit", help="PAIS page size, 1-100")] = 50,
+    after: Annotated[str, typer.Option("--after", help="Cursor from the preceding page")] = "",
+    config: ConfigOption = None,
+) -> None:
+    """List PAIS MCP tool names and approval state (read-only)."""
+    from vmware_privateai.ops.pais import list_pais_mcp_tools
+
+    with _client(config) as client:
+        out = list_pais_mcp_tools(client, server_id=server_id or None,
+                                  is_approved=True if approved else None,
+                                  limit=limit, after=after or None)
+    console.print(f"\n[bold cyan]PAIS MCP tools ({out['returned']} on this page):[/]")
+    for item in out["items"]:
+        name = escape(item["name"] or item["id"])
+        server = escape(item["server_name"] or item["server_id"])
+        console.print(
+            f"  [cyan]{name}[/]  server={server}  approved={item['is_approved']}"
+        )
+    if out.get("hint"):
+        console.print(f"  [dim]{out['hint']}[/]")
+    if out.get("next_after"):
+        console.print(f"  [dim]next --after {escape(out['next_after'])}[/]")
 
 
 @pais_app.command("monitoring-summary")

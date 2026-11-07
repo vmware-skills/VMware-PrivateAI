@@ -142,6 +142,12 @@ PAIS_ENDPOINTS: dict[str, dict[str, str]] = {
     "list_model_catalog": {"method": "GET", "path": "/api/v1/control/models", "status": "INFERRED_EXACT"},
     "list_data_sources": {"method": "GET", "path": "/api/v1/control/data-sources", "status": "INFERRED_EXACT"},
     "list_knowledge_bases": {"method": "GET", "path": "/api/v1/control/knowledge-bases", "status": "INFERRED_EXACT"},
+    # Exact routes and list response shape from the current Broadcom PAIS API reference:
+    # https://developer.broadcom.com/xapis/vmware-private-ai-service-api/latest/api/v1/control/mcp-servers/get/
+    # https://developer.broadcom.com/xapis/vmware-private-ai-service-api/latest/api/v1/control/mcp-servers/tools/get/
+    # Live appliance compatibility and deployed base URL remain unverified.
+    "list_pais_mcp_servers": {"method": "GET", "path": "/api/v1/control/mcp-servers", "status": "VERIFIED"},
+    "list_pais_mcp_tools": {"method": "GET", "path": "/api/v1/control/mcp-servers/tools", "status": "VERIFIED"},
     "list_indexes": {
         "method": "GET",
         "path": "/api/v1/control/knowledge-bases/{kb}/indexes",

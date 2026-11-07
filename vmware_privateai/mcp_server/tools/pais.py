@@ -1,6 +1,6 @@
-"""Private AI Service (PAIS) MCP tools (2 read) — served models and knowledge bases.
+"""Private AI Service (PAIS) MCP tools — models, knowledge and MCP gallery.
 
-list_pais_models, list_pais_knowledge_bases [READ]. These talk to the PAIS REST endpoint
+These read tools talk to the PAIS REST endpoint
 (separate from the vCenter connection), authenticated with the OIDC bearer token in
 VMWARE_PRIVATEAI_PAIS_TOKEN. Signatures use ``Optional[X]`` (not PEP 604) — 踩坑 #33.
 """
@@ -127,6 +127,61 @@ def list_pais_data_sources(
             return list_data_sources(client, name=name, limit=limit, offset=offset)
     except Exception as exc:  # noqa: BLE001
         return {"error": _safe_error(exc, "list_pais_data_sources")}
+
+
+@mcp.tool(annotations=_READ)
+@vmware_tool(risk_level="low")
+def list_pais_mcp_servers(limit: int = 50, after: Optional[str] = None) -> dict:
+    """[READ] List registered PAIS MCP servers without URLs, headers or credentials.
+
+    Returns bounded server ID/name/transport/availability rows plus `truncated`
+    and `next_after` for PAIS cursor pagination. A malformed response is
+    `unmeasured`, never an empty registry. PAIS registration and tool approval
+    are platform controls; backend Policy and product RBAC still apply.
+
+    Args:
+        limit: Page size from 1 to 100 (default 50).
+        after: `next_after` cursor from a previous page.
+    """
+    try:
+        from vmware_privateai.ops.pais import list_pais_mcp_servers as _list
+        from vmware_privateai.pais.client import PaisClient
+
+        with PaisClient.from_config() as client:
+            return _list(client, limit=limit, after=after)
+    except Exception as exc:  # noqa: BLE001
+        return {"error": _safe_error(exc, "list_pais_mcp_servers")}
+
+
+@mcp.tool(annotations=_READ)
+@vmware_tool(risk_level="low")
+def list_pais_mcp_tools(
+    server_id: Optional[str] = None,
+    is_approved: Optional[bool] = None,
+    limit: int = 50,
+    after: Optional[str] = None,
+) -> dict:
+    """[READ] List PAIS MCP tool names, availability and approval state.
+
+    Returns no tool description or input/output schema. `is_approved` reflects
+    gallery visibility, not authority to call VMware; backend Policy and RBAC
+    still decide. A malformed or partial PAIS response cannot mean no tools.
+
+    Args:
+        server_id: Optional registered server ID from list_pais_mcp_servers.
+        is_approved: Filter true/false; omit to include both states.
+        limit: Page size from 1 to 100 (default 50).
+        after: `next_after` cursor from a previous page.
+    """
+    try:
+        from vmware_privateai.ops.pais import list_pais_mcp_tools as _list
+        from vmware_privateai.pais.client import PaisClient
+
+        with PaisClient.from_config() as client:
+            return _list(client, server_id=server_id, is_approved=is_approved,
+                         limit=limit, after=after)
+    except Exception as exc:  # noqa: BLE001
+        return {"error": _safe_error(exc, "list_pais_mcp_tools")}
 
 
 @mcp.tool(annotations=_READ)

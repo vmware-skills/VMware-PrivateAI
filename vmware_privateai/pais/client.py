@@ -19,6 +19,9 @@ from vmware_privateai.pais.config import TOKEN_ENV_VAR, PaisConfig, load_pais_co
 _TIMEOUT = 30.0
 # Transient gateway statuses that earn one light retry (family error-recovery layer 1).
 _TRANSIENT = frozenset({502, 503, 504})
+_VERIFIED_GALLERY_PATHS = frozenset({
+    "/api/v1/control/mcp-servers", "/api/v1/control/mcp-servers/tools",
+})
 
 
 class PaisClient:
@@ -80,6 +83,12 @@ class PaisClient:
                 f"Provider, re-export {TOKEN_ENV_VAR}, and retry."
             )
         if code == 404:
+            if path.split("?", 1)[0] in _VERIFIED_GALLERY_PATHS:
+                raise PaisError(
+                    "PAIS MCP gallery API returned HTTP 404. This route is in the current "
+                    "Broadcom API reference; check the configured PAIS base URL and the "
+                    "installed PAIS version before claiming the registry is empty."
+                )
             raise PaisError(
                 f"PAIS path not found (HTTP 404) at '{path}'. Confirm the PAIS base URL / namespace "
                 f"in config.yaml 'pais.endpoint' — the /api/v1 path prefix is deployment-specific and "

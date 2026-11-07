@@ -61,7 +61,7 @@ Web Services API (pyVmomi) plus the PAIS REST API.
 | **Sizing & air-gap** | LLM GPU/storage sizing advisor, local pais.yml image inspector | 2 | 2 R |
 | **Access self-check** | account in use + whether it holds each tool's vSphere privileges (root folder) | 1 | 1 R |
 
-**18 MCP tools (17 read / 1 write).** Reads are strictly non-destructive. The single write
+**20 MCP tools (19 read / 1 write).** Reads are strictly non-destructive. The single write
 (`assign_vgpu`) previews its blast radius, refuses a powered-on VM, never powers a VM off itself, is
 double-confirmed at the CLI, and is audit-logged. Pre-flight the write with `validate_vgpu_profile`.
 
@@ -142,7 +142,7 @@ fresh token from your Identity Provider, re-export it, and retry.
 - **MCP** — agent-driven operations with structured JSON; run `vmware-privateai mcp` (an installed
   console script, so no `uvx` network re-resolve — works through enterprise TLS proxies, 踩坑 #25).
 
-## MCP Tools (18 — 17 read, 1 write)
+## MCP Tools (20 — 19 read, 1 write)
 
 | Category | Tools | R/W |
 |----------|-------|:---:|
@@ -152,6 +152,7 @@ fresh token from your Identity Provider, re-export it, and retry.
 | Profile catalog | `list_vgpu_profiles`, `list_directpath_profiles` | Read |
 | Profile validation | `validate_vgpu_profile` | Read |
 | Private AI Service | `list_pais_models`, `get_pais_model_catalog`, `list_pais_knowledge_bases`, `list_pais_data_sources` | Read |
+| PAIS MCP gallery | `list_pais_mcp_servers`, `list_pais_mcp_tools` | Read |
 | PAIS monitoring | `get_pais_monitoring_summary` | Read |
 | Sizing & air-gap | `advise_pais_sizing`, `verify_pais_bundle` | Read |
 | Access self-check | `get_access_info` | Read |
@@ -163,7 +164,14 @@ message, not a bug. `advise_pais_sizing` and `verify_pais_bundle` need **no conn
 computation / local file parse). `check_gpu_host_readiness` reports what the vSphere API exposes and says
 so where it cannot (NVIDIA driver / MFT VIB / MIG need nvidia-smi on the host).
 
-**List envelope**: every `*_list` tool returns `{items, returned, limit, offset, total, truncated, hint}`
+`list_pais_mcp_servers` and `list_pais_mcp_tools` read the official PAIS MCP
+gallery API, returning bounded names/approval state without server URLs,
+headers or raw schemas. The API path is documented, but live PAIS compatibility
+is unverified. Tool approval is a gallery control, not a VMware Policy or
+vCenter RBAC grant. Their cursor-based `next_after`/`truncated` envelope differs
+from the client-paged inventory lists below.
+
+**Inventory list envelope**: the client-paged inventory tools return `{items, returned, limit, offset, total, truncated, hint}`
 — read rows from `items` and check `truncated` before concluding a listing is complete; empty `items`
 with `truncated:false` means checked-and-none, not a failure. Lists paginate at `limit=50`; filter with
 the tool's `name`/`vendor`/`host`/`profile`/`vm` arguments rather than paging the whole estate.

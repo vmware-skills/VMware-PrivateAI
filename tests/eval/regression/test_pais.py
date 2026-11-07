@@ -8,6 +8,7 @@ missing-token teaching error, and defensive parsing of an unconfirmed response s
 
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 import pathlib
 
@@ -43,6 +44,80 @@ def test_pais_paths_and_keys_are_spec_listed():
     assert pais.PAIS_KEYS_USED - set(spec.PAIS_ENDPOINTS) == set()
     allowed = {e["path"] for e in spec.PAIS_ENDPOINTS.values()}
     assert pais.PAIS_PATHS_USED - allowed == set(), "ops/pais touches a PAIS path absent from the verified spec"
+
+
+def test_pais_gallery_server_page_and_cursor(monkeypatch):
+    seen = {}
+
+    def handler(request):
+        seen["path"] = request.url.path
+        seen["query"] = dict(request.url.params)
+        return httpx.Response(200, json={"data": [{"id": "server-1", "name": "ops\x00server",
+                                                   "transport": "STREAMABLE_HTTP", "availability": "AVAILABLE",
+                                                   "url": "https://internal.example",
+                                                   "headers": {"Authorization": "secret"}}],
+                                        "has_more": True, "last_id": "server-1", "num_objects": 0})
+
+    with _client(monkeypatch, handler) as client:
+        out = pais.list_pais_mcp_servers(client, limit=1, after="server-0")
+    assert seen == {"path": "/api/v1/control/mcp-servers", "query": {"limit": "1", "after": "server-0"}}
+    assert out["items"][0]["name"] == "opsserver"
+    assert out["next_after"] == "server-1" and out["truncated"] is True
+    assert out["total"] is None  # PAIS did not calculate total for this request.
+    assert "Authorization" not in str(out) and "internal.example" not in str(out)
+
+
+def test_pais_gallery_tool_projection_and_approval_filter(monkeypatch):
+    seen = {}
+
+    def handler(request):
+        seen["query"] = dict(request.url.params)
+        return httpx.Response(200, json={"data": [{"id": "tool-1", "server": {"id": "server-1", "name": "ops"},
+                                                   "origin_name": "list_vms", "is_approved": True,
+                                                   "availability": "AVAILABLE", "num_linked_agents": 2,
+                                                   "input_schema": "sensitive schema",
+                                                   "description": "untrusted text"}],
+                                        "has_more": False})
+
+    with _client(monkeypatch, handler) as client:
+        out = pais.list_pais_mcp_tools(client, server_id="server-1", is_approved=True)
+    assert seen["query"] == {"limit": "50", "server": "server-1", "is_approved": "true"}
+    assert out["items"] == [{"id": "tool-1", "server_id": "server-1", "server_name": "ops",
+                             "name": "list_vms", "is_approved": True,
+                             "availability": "AVAILABLE", "linked_agents": 2}]
+    assert "sensitive schema" not in str(out) and "untrusted text" not in str(out)
+
+
+def test_pais_gallery_unknown_shape_cannot_mean_no_tools(monkeypatch):
+    with _client(monkeypatch, lambda request: httpx.Response(200, json={"unexpected": []})) as client:
+        out = pais.list_pais_mcp_tools(client)
+    assert out["status"] == "unmeasured" and out["truncated"] is None
+    assert "not recognized" in out["hint"]
+
+
+def test_pais_gallery_over_limit_cannot_skip_unshown_rows(monkeypatch):
+    with _client(monkeypatch, lambda request: httpx.Response(
+        200, json={"data": [{"id": "first"}, {"id": "second"}],
+                   "has_more": True, "last_id": "second"})) as client:
+        out = pais.list_pais_mcp_servers(client, limit=1)
+    assert out["returned"] == 1 and out["truncated"] is True
+    assert out["next_after"] is None and out["status"] == "partial"
+
+
+def test_pais_gallery_verified_route_404_is_not_empty(monkeypatch):
+    with _client(monkeypatch, lambda request: httpx.Response(404)) as client:
+        with pytest.raises(Exception, match="MCP gallery API returned HTTP 404"):
+            pais.list_pais_mcp_servers(client)
+
+
+def test_pais_gallery_tools_remain_read_only_and_need_no_vsphere_privilege():
+    from vmware_privateai.access_requirements import REQUIREMENTS
+    from vmware_privateai.mcp_server.server import mcp
+
+    tools = {tool.name: tool for tool in asyncio.run(mcp.list_tools())}
+    for name in ("list_pais_mcp_servers", "list_pais_mcp_tools"):
+        assert tools[name].annotations.readOnlyHint is True
+        assert REQUIREMENTS[name] == []  # PAIS bearer scope, not vCenter privilege
 
 
 def test_ops_hits_exactly_the_spec_model_path(monkeypatch):
