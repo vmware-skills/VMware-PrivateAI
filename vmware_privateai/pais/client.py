@@ -9,6 +9,7 @@ this client; ops code never calls httpx directly.
 
 from __future__ import annotations
 
+import urllib.request
 from typing import Any
 
 import httpx
@@ -29,11 +30,17 @@ class PaisClient:
 
     def __init__(self, config: PaisConfig, *, transport: httpx.BaseTransport | None = None) -> None:
         self._config = config
+        mounts = None
+        url = httpx.URL(config.endpoint)
+        if transport is None and urllib.request.proxy_bypass(url.host):
+            origin = f"{url.scheme}://{url.netloc.decode('ascii')}"
+            mounts = {origin: httpx.HTTPTransport(verify=config.verify_ssl, trust_env=True)}
         self._client = httpx.Client(
             base_url=config.endpoint.rstrip("/"),
             verify=config.verify_ssl,
             timeout=_TIMEOUT,
             transport=transport,
+            mounts=mounts,
         )
 
     @classmethod
