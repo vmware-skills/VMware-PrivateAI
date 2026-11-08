@@ -179,3 +179,8 @@ vmware-privateai mcp --expose read --allow-write assign_vgpu
 
 ## License
 MIT
+
+## 系统代理绕过
+
+PAIS REST 客户端按操作系统的代理绕过列表直连配置的目标地址。
+TLS 校验仍由 `verify_ssl` 控制，`SSL_CERT_FILE` 等 CA 环境设置继续生效；其他地址保留原有代理路由。
