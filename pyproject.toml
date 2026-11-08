@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vmware-privateai"
-version = "2.4.2"
+version = "2.5.0"
 description = "VMware Private AI Foundation with NVIDIA ops — GPU inventory, vGPU/DirectPath profiles, utilization, model-serving (MCP + CLI)"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
-authors = [{ name = "Wei Zhou", email = "wei-wz.zhou@broadcom.com" }]
+authors = [{ name = "Wei Zhou", email = "zhouwei008@gmail.com" }]
 keywords = ["vmware", "vcf", "gpu", "nvidia", "vgpu", "private-ai", "mcp", "ai-ops"]
 classifiers = [
     "Development Status :: 4 - Beta",

@@ -1,5 +1,8 @@
-## Unreleased — dependency security and PAIS MCP gallery
+## v2.5.0 — read-only PAIS MCP gallery and dependency security (2026-11-08)
 
+* Update public author/project contact metadata to `zhouwei008@gmail.com`.
+
+### dependency security and PAIS MCP gallery
 * The PAIS REST client now honors system proxy bypass rules for the configured origin while preserving TLS verification and CA environment settings.
 
 * Require certifi 2026.10.19 or later (GHSA-6q48-6c7w-9gw2) and PyJWT 2.15.1 or later (the 2.13 and 2.14 security advisories) for the MCP HTTP/auth dependency chain. The development lock resolves those safe versions.
