@@ -13,6 +13,13 @@
   is visibility metadata, not a backend authorization grant. The API contract
   is covered by synthetic tests; live PAIS compatibility remains unverified.
 
+## Unreleased — security documentation corrections
+
+Clarify actual capability, credential, local-write and transport boundaries where applicable.
+Pin documented setup/fallback tools and make credential examples owner-only before writing,
+without overwriting existing files. Runtime permissions, TLS defaults and approval behavior are unchanged.
+These edits do not establish a new ClawHub scan verdict.
+
 ## v2.4.2 — a login refused for lack of a vSphere role says so (2026-10-19)
 
 (2.4.1 was not used for this package; this release follows 2.4.0.)

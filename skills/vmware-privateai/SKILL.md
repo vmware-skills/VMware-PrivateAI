@@ -1,22 +1,20 @@
 ---
 name: vmware-privateai
 description: >
-  Use this skill whenever the user needs the GPU / AI-infrastructure layer of VMware Private AI
-  Foundation with NVIDIA (PAIF-N) on vSphere 9.x / VCF 9.1: inventory GPU hosts and physical GPU
-  devices, see which VMs consume a vGPU and the profile each holds, read real-time GPU utilization,
-  list the vGPU and DirectPath profile catalog, assign a VM's vGPU profile, and list Private AI
-  Service (PAIS) served models and knowledge bases. Always use this skill for "list GPU hosts",
-  "which VMs are using a vGPU", "GPU utilization", "assign a vGPU profile", "list vGPU profiles",
-  "list served models" when the context is explicitly VMware / vSphere / VCF Private AI / NVIDIA
-  vGPU. Do NOT use for the backing VM's power/snapshot/clone/migrate (use vmware-aiops), read-only
-  vSphere inventory/alarms/host health (use vmware-monitor), or GPU-enabled Tanzu Kubernetes
-  (use vmware-vks). This skill is the GPU lens; vmware-aiops owns the VM lifecycle behind it.
+  Use for VMware Private AI Foundation with NVIDIA on vSphere 9.x/VCF 9.1: GPU
+  inventory/readiness/utilization, vGPU consumers and profiles, DirectPath catalog, vGPU assignment,
+  and PAIS served models, knowledge bases, catalogs/data sources and MCP gallery. Trigger on "list GPU
+  hosts", "which VMs use a vGPU", "GPU utilization", "assign a vGPU profile" or "list served models"
+  in VMware/NVIDIA context. Supporting commands check access, estimate model sizing locally and
+  inspect local air-gap bundles without contacting a model provider. For backing VM
+  power/snapshot/clone/migrate use vmware-aiops, general health/alarms vmware-monitor, or GPU-enabled
+  Tanzu Kubernetes vmware-vks.
 installer:
   kind: uv
   package: vmware-privateai
 allowed-tools:
   - Bash
-metadata: {"openclaw":{"requires":{"anyBins":["vmware-privateai","uvx"]},"optional":{"env":["VMWARE_PRIVATEAI_CONFIG"]}}}
+metadata: {"openclaw":{"requires":{"anyBins":["vmware-privateai","uvx"]},"optional":{"env":["VMWARE_PRIVATEAI_CONFIG","VMWARE_PRIVATEAI_<TARGET>_PASSWORD","VMWARE_PRIVATEAI_<TARGET>_USERNAME","VMWARE_PRIVATEAI_PAIS_TOKEN"]}}}
 ---
 
 # VMware Private AI (Foundation with NVIDIA) — GPU & Model-Serving Ops
@@ -31,7 +29,9 @@ metadata: {"openclaw":{"requires":{"anyBins":["vmware-privateai","uvx"]},"option
 The GPU / AI-infrastructure lens for the VMware skill family — GPU host & device inventory, vGPU
 consumers, real-time GPU utilization, the vGPU / DirectPath profile catalog, vGPU assignment, and
 **Private AI Service (PAIS)** served models and knowledge bases — over the **vSphere 9.x / VCF 9.1**
-Web Services API (pyVmomi) plus the PAIS REST API.
+Web Services API (pyVmomi) plus the PAIS REST API. Supporting commands provide
+readiness/access checks, local model sizing and local air-gap bundle inspection;
+sizing does not switch a model provider or consume inference quota.
 
 > **Companion skills**: [vmware-aiops](https://github.com/vmware-skills/VMware-AIops) (the vCenter VMs
 > behind AI workloads — power/snapshot/clone), [vmware-vks](https://github.com/vmware-skills/VMware-VKS)
@@ -223,7 +223,7 @@ Full list: `references/cli-reference.md`. Per-tool response-token estimates: `re
 - **`gpu host-list` returns nothing on a cluster you know has GPUs** — only `shared` / `direct` /
   `sharedDirect` graphics types count as compute GPUs (the plain host framebuffer is excluded). If real
   9.x hardware surfaces a GPU under an unexpected type, that is a beta known-limitation — file an issue
-  with the raw `gpu host-get` output so the projection can be widened.
+  with a minimal, redacted `gpu host-get` example so the projection can be widened. Remove host identifiers, internal addresses, sensitive hardware/capacity details and credentials before sharing.
 - **`gpu utilization` shows a VM with `metrics unavailable`** — the NVIDIA host GPU driver is not
   exposing counters for it (not an error). Note the `gpu.*` perf counters may report at host level on
   some builds — verify the entity type on real hardware (beta caveat).

@@ -17,6 +17,8 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 > **字段名** 与部分 PAIS 路径为防御式,待真机 9.x 硬件验证(见 `skills/vmware-privateai/SKILL.md` 里的 beta 活口)。由家族 harness 治理
 > (审计 + 策略 + 教学性错误);读写授权交由 vCenter 服务账号的 RBAC 角色。
 
+配套命令还提供 GPU 就绪与访问检查、本地模型容量估算及本地气隙 bundle 检查。本地估算不调用模型提供方，也不消耗推理配额。提交 issue 的诊断示例须最小化并脱敏，去掉标识符、内部地址、敏感硬件/容量信息和凭据。
+
 ## 升级到 2.0
 
 2.0 把当时的全部 MCP 工具改成动词在前（例如 `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`），完整的新旧名对照表见
@@ -56,7 +58,7 @@ PAIS 批准控制目录可见性，后端 VMware Policy 与产品 RBAC 仍决定
 ## 快速开始
 
 ```bash
-uv tool install vmware-privateai
+uv tool install vmware-privateai==2.5.0
 vmware-privateai version
 vmware-privateai gpu host-list        # 第一条读命令 —— 列出有 GPU 的主机
 ```
