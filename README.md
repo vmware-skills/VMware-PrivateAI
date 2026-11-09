@@ -1,8 +1,22 @@
 <!-- mcp-name: io.github.vmware-skills/vmware-privateai -->
 
-# VMware Private AI (Foundation with NVIDIA) — GPU & Model-Serving Ops
+# VMware Private AI
 
-For a read-only check of this skill with your model and agent host, use the shared [model-fit self-test](https://github.com/vmware-skills/marketplace/blob/main/MODEL_FIT_SELF_TEST.md) in the marketplace root.
+[![PyPI](https://img.shields.io/pypi/v/vmware-privateai)](https://pypi.org/project/vmware-privateai/) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#readme-license)
+
+English | [中文](README-CN.md)
+
+Maintainer: Wei Zhou · [zhouwei008@gmail.com](mailto:zhouwei008@gmail.com)
+
+Community-maintained open-source project; not an official VMware or Broadcom product.
+
+[Overview](#readme-overview) · [Quick Start](#readme-quick-start) · [MCP Configuration](#readme-mcp-configuration) · [Capabilities and Workflows](#readme-capabilities-and-workflows) · [Safety and Audit](#readme-safety-and-audit) · [Troubleshooting](#readme-troubleshooting) · [Companion Skills](#readme-companion-skills) · [Reference](#readme-reference) · [License](#readme-license)
+
+<a id="readme-overview"></a>
+
+## Overview
+
+Runs locally over stdio by default; configure required targets and credentials on your own machine.
 
 The **GPU / AI-infrastructure** lens of the VMware skill family — GPU host and device inventory, vGPU consumers,
 live GPU utilization, the vGPU / DirectPath profile catalog, vGPU assignment, and the models and knowledge bases
@@ -22,17 +36,64 @@ PAIS REST API. MCP server + CLI.
 
 Supporting commands also check GPU readiness and access, estimate model sizing locally and inspect local air-gap bundles. Local sizing does not contact a model provider or consume inference quota. Diagnostic examples shared in issues must be minimized and redacted: remove identifiers, internal addresses, sensitive hardware/capacity details and credentials.
 
-## Upgrading to 2.0
+Full agent instructions: [`skills/vmware-privateai/SKILL.md`](skills/vmware-privateai/SKILL.md).
 
-2.0 renamed every MCP tool it had so every name starts with a verb (e.g. `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`). The full old → new table is in
-[RELEASE_NOTES.md](RELEASE_NOTES.md#v200--mcp-tools-renamed-verb-first). Nothing else changes: same tools, parameters,
-safety gates and CLI commands. If an agent prompt, script or `~/.vmware/rules.yaml` names a tool, update it — though deny
-rules written with the old names keep working with vmware-policy ≥ 1.18 (`vmware-audit policy` lists any rule the
-renames widened), and vmware-pilot ≥ 1.13 translates old names in saved workflows.
-If an install older than 2.0 shares that `rules.yaml`, give it vmware-policy ≥ 1.18.2 too: it matches each rule
-against both the old and the new name, so one file serves both.
+<a id="readme-quick-start"></a>
 
-## Capabilities (20 MCP tools — 19 read / 1 write)
+## Quick Start
+
+Requires Python `>=3.11` and `uv`.
+
+```bash
+uv tool install vmware-privateai==2.5.0
+vmware-privateai --help
+```
+
+Target, credential and local data setup: [setup guide](skills/vmware-privateai/references/setup-guide.md).
+
+<details>
+<summary>Installation and configuration details (including offline setup)</summary>
+
+### Quick Start
+
+```bash
+uv tool install vmware-privateai==2.5.0
+vmware-privateai version
+vmware-privateai gpu host-list        # first read command — lists the hosts that have GPUs
+```
+
+Configuration lives in `~/.vmware-privateai/config.yaml` (targets + an optional `pais:` section); passwords and the
+PAIS bearer token live in `~/.vmware-privateai/.env` (chmod 600). See
+`skills/vmware-privateai/references/setup-guide.md`.
+
+
+</details>
+
+<a id="readme-mcp-configuration"></a>
+
+## MCP Configuration
+
+Copy this configuration into your MCP client's local stdio settings. The client must be able to find `uvx`; the initial package installation requires access to a package index.
+
+```json
+{
+  "mcpServers": {
+    "vmware-privateai": {
+      "command": "uvx",
+      "args": ["--from", "vmware-privateai==2.5.0", "vmware-privateai-mcp"],
+      "env": {
+        "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml"
+      }
+    }
+  }
+}
+```
+
+<a id="readme-capabilities-and-workflows"></a>
+
+## Capabilities and Workflows
+
+### Capabilities (20 MCP tools — 19 read / 1 write)
 
 | Category | Tools | Read/Write |
 |----------|-------|:----------:|
@@ -65,19 +126,7 @@ headers or raw tool schemas. PAIS approval controls gallery visibility; the
 underlying VMware Policy and product RBAC still decide what a caller may do.
 These routes have not been tested against a live PAIS appliance.
 
-## Quick Start
-
-```bash
-uv tool install vmware-privateai==2.5.0
-vmware-privateai version
-vmware-privateai gpu host-list        # first read command — lists the hosts that have GPUs
-```
-
-Configuration lives in `~/.vmware-privateai/config.yaml` (targets + an optional `pais:` section); passwords and the
-PAIS bearer token live in `~/.vmware-privateai/.env` (chmod 600). See
-`skills/vmware-privateai/references/setup-guide.md`.
-
-## Common Workflows
+### Common Workflows
 
 **1. Find an idle GPU and change a VM's vGPU profile**
 ```bash
@@ -117,20 +166,19 @@ Use `--after <cursor>` when a page prints `next --after`. These commands do
 not register or approve tools and cannot prove a backend caller is authorized.
 Live PAIS response behavior still needs validation.
 
-## Companion Skills
-- [vmware-aiops](https://github.com/vmware-skills/VMware-AIops) — the vCenter VMs behind AI workloads (power/snapshot/clone/migrate)
-- [vmware-vks](https://github.com/vmware-skills/VMware-VKS) — GPU-enabled Tanzu Kubernetes
-- [vmware-monitor](https://github.com/vmware-skills/VMware-Monitor) — read-only vSphere health
+<a id="readme-safety-and-audit"></a>
 
-This skill is the GPU lens over all three.
+## Safety and Audit
 
-## Security
+### Security
+
 See `SECURITY.md` at the repo root. Highlights: credentials only in `.env` (chmod 600, `b64:` obfuscation); TLS
 verification on by default; all vSphere/PAIS text passes `vmware_policy.sanitize()` against prompt injection;
 read/write authorization is left to vCenter RBAC; `assign_vgpu` is power-off gated + double-confirmed + audited.
 
 <!-- usage: remote-and-exposure -->
-## Remote access (HTTPS) and limiting tools
+
+### Remote access (HTTPS) and limiting tools
 
 By default `vmware-privateai mcp` speaks stdio to one local client and offers every tool. Two options change that
 (vmware-policy ≥ 1.21.0).
@@ -196,11 +244,50 @@ least-privilege.
 
 Details: `skills/vmware-privateai/references/setup-guide.md` ("Serving MCP over HTTPS", "Limiting which tools are offered").
 
-## System proxy bypass
+<a id="readme-troubleshooting"></a>
+
+## Troubleshooting
+
+### System proxy bypass
 
 The PAIS REST client honors the operating system proxy bypass list for the configured origin.
 TLS verification still follows `verify_ssl`, and CA environment settings such as `SSL_CERT_FILE` remain active.
 Other origins retain their normal proxy routing.
 
+<a id="readme-companion-skills"></a>
+
+## Companion Skills
+
+The VMware Skills family contains 14 MCP servers and the shared Policy library. Choose tools by responsibility: [vmware-skills](https://github.com/vmware-skills).
+
+### Companion Skills
+
+- [vmware-aiops](https://github.com/vmware-skills/VMware-AIops) — the vCenter VMs behind AI workloads (power/snapshot/clone/migrate)
+- [vmware-vks](https://github.com/vmware-skills/VMware-VKS) — GPU-enabled Tanzu Kubernetes
+- [vmware-monitor](https://github.com/vmware-skills/VMware-Monitor) — read-only vSphere health
+
+This skill is the GPU lens over all three.
+
+<a id="readme-reference"></a>
+
+## Reference
+
+Release history: [RELEASE_NOTES.md](RELEASE_NOTES.md).
+
+Read-only self-test with your own model and agent host: [model-fit self-test](https://github.com/vmware-skills/marketplace/blob/main/MODEL_FIT_SELF_TEST.md).
+
+### Upgrading to 2.0
+
+2.0 renamed every MCP tool it had so every name starts with a verb (e.g. `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`). The full old → new table is in
+[RELEASE_NOTES.md](RELEASE_NOTES.md#v200--mcp-tools-renamed-verb-first). Nothing else changes: same tools, parameters,
+safety gates and CLI commands. If an agent prompt, script or `~/.vmware/rules.yaml` names a tool, update it — though deny
+rules written with the old names keep working with vmware-policy ≥ 1.18 (`vmware-audit policy` lists any rule the
+renames widened), and vmware-pilot ≥ 1.13 translates old names in saved workflows.
+If an install older than 2.0 shares that `rules.yaml`, give it vmware-policy ≥ 1.18.2 too: it matches each rule
+against both the old and the new name, so one file serves both.
+
+<a id="readme-license"></a>
+
 ## License
+
 MIT
