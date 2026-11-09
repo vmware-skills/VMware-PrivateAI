@@ -1,8 +1,22 @@
 <!-- mcp-name: io.github.vmware-skills/vmware-privateai -->
 
-# VMware Private AI(Foundation with NVIDIA)—— GPU 与模型服务运维
+# VMware Private AI
 
-要用自己的模型和 Agent 平台进行只读自测，请看 marketplace 根目录的[共享模型适配自测任务](https://github.com/vmware-skills/marketplace/blob/main/MODEL_FIT_SELF_TEST.md)。
+[![PyPI](https://img.shields.io/pypi/v/vmware-privateai)](https://pypi.org/project/vmware-privateai/) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#readme-license)
+
+[English](README.md) | 中文
+
+维护者: Wei Zhou · [zhouwei008@gmail.com](mailto:zhouwei008@gmail.com)
+
+社区维护的开源项目，非 VMware 或 Broadcom 官方产品。
+
+[概述](#readme-overview) · [快速开始](#readme-quick-start) · [MCP 配置](#readme-mcp-configuration) · [能力与工作流](#readme-capabilities-and-workflows) · [安全与审计](#readme-safety-and-audit) · [故障排查](#readme-troubleshooting) · [配套 Skills](#readme-companion-skills) · [参考资料](#readme-reference) · [许可证](#readme-license)
+
+<a id="readme-overview"></a>
+
+## 概述
+
+默认通过本地 Stdio 运行；请在本机配置所需目标和凭据。
 
 VMware skill 家族的 **GPU / AI 基础设施** 视角 —— GPU 主机与设备清点、vGPU 消费者、实时 GPU 利用率、
 vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)** 的已服务模型与知识库,
@@ -19,15 +33,67 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 
 配套命令还提供 GPU 就绪与访问检查、本地模型容量估算及本地气隙 bundle 检查。本地估算不调用模型提供方，也不消耗推理配额。提交 issue 的诊断示例须最小化并脱敏，去掉标识符、内部地址、敏感硬件/容量信息和凭据。
 
-## 升级到 2.0
+完整的 Agent 指令见 [`skills/vmware-privateai/SKILL.md`](skills/vmware-privateai/SKILL.md).
 
-2.0 把当时的全部 MCP 工具改成动词在前（例如 `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`），完整的新旧名对照表见
-[RELEASE_NOTES.md](RELEASE_NOTES.md#v200--mcp-tools-renamed-verb-first)。其他都不变：工具、参数、安全确认门和 CLI 命令都一样。
-如果 agent 提示词、脚本或 `~/.vmware/rules.yaml` 里写了工具名，请改成新名——不过用旧名写的 deny 规则在
-vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改名而多匹配的规则），vmware-pilot ≥ 1.13 也会自动转换已保存工作流里的旧名。
-如果还有 2.0 之前的安装共用这个 `rules.yaml`，请把它的 vmware-policy 也升到 ≥ 1.18.2：它会按新旧两个名字匹配每条规则，一份文件两边都管用。
+<a id="readme-quick-start"></a>
 
-## 能力(20 个 MCP 工具 —— 19 读 / 1 写)
+## 快速开始
+
+需要 Python `>=3.11` 和 `uv`。
+
+```bash
+uv tool install vmware-privateai==2.5.0
+vmware-privateai --help
+```
+
+目标、凭据和本地数据目录设置见 [setup guide](skills/vmware-privateai/references/setup-guide.md).
+
+<details>
+<summary>安装与配置详情（含离线安装）</summary>
+
+### 快速开始
+
+```bash
+uv tool install vmware-privateai==2.5.0
+vmware-privateai version
+vmware-privateai gpu host-list        # 第一条读命令 —— 列出有 GPU 的主机
+```
+
+配置位于 `~/.vmware-privateai/config.yaml`(targets + 可选 `pais:` 段);密码与 PAIS bearer token 存于
+`~/.vmware-privateai/.env`(chmod 600)。详见 `skills/vmware-privateai/references/setup-guide.md`。
+
+
+</details>
+
+<a id="readme-mcp-configuration"></a>
+
+## MCP 配置
+
+将以下配置复制到 MCP 客户端的本地 Stdio 配置中。客户端需要能找到 `uvx`；首次安装所需包时需要访问包源。
+
+```json
+{
+  "mcpServers": {
+    "vmware-privateai": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "vmware-privateai==2.5.0",
+        "vmware-privateai-mcp"
+      ],
+      "env": {
+        "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml"
+      }
+    }
+  }
+}
+```
+
+<a id="readme-capabilities-and-workflows"></a>
+
+## 能力与工作流
+
+### 能力(20 个 MCP 工具 —— 19 读 / 1 写)
 
 | 类别 | 工具 | 读/写 |
 |------|------|:----:|
@@ -55,18 +121,7 @@ CLI 双重确认、统一审计到 `~/.vmware/audit.db`;可先用 `validate_vgpu
 PAIS 批准控制目录可见性，后端 VMware Policy 与产品 RBAC 仍决定实际权限。这两个路径尚未在
 真实 PAIS 设备上验证。
 
-## 快速开始
-
-```bash
-uv tool install vmware-privateai==2.5.0
-vmware-privateai version
-vmware-privateai gpu host-list        # 第一条读命令 —— 列出有 GPU 的主机
-```
-
-配置位于 `~/.vmware-privateai/config.yaml`(targets + 可选 `pais:` 段);密码与 PAIS bearer token 存于
-`~/.vmware-privateai/.env`(chmod 600)。详见 `skills/vmware-privateai/references/setup-guide.md`。
-
-## 典型工作流
+### 典型工作流
 
 **1. 找空闲 GPU 并给虚机换 vGPU 配置**
 ```bash
@@ -103,20 +158,19 @@ vmware-privateai pais mcp-tools --server-id <PAIS_SERVER_ID>
 若页面打印 `next --after`，可用 `--after <游标>` 取下一页。这些命令不注册或批准工具，
 也不能证明后端调用者有权限；真实 PAIS 响应仍待验证。
 
-## Companion Skills
-- [vmware-aiops](https://github.com/vmware-skills/VMware-AIops) —— AI 负载背后的 vCenter 虚机(开关机/快照/克隆/迁移)
-- [vmware-vks](https://github.com/vmware-skills/VMware-VKS) —— GPU 使能的 Tanzu Kubernetes
-- [vmware-monitor](https://github.com/vmware-skills/VMware-Monitor) —— 只读 vSphere 健康
+<a id="readme-safety-and-audit"></a>
 
-本 skill 是这三者之上的 GPU 视角。
+## 安全与审计
 
-## 安全
+### 安全
+
 详见仓库根目录 `SECURITY.md`。要点:凭据仅存 `.env`(chmod 600、`b64:` 混淆);默认开启 TLS 校验;
 所有 vSphere/PAIS 文本经 `vmware_policy.sanitize()` 防注入;读写授权交由 vCenter RBAC;
 `assign_vgpu` 关机门控 + 双重确认 + 审计。
 
 <!-- usage: remote-and-exposure -->
-## 远程访问（HTTPS）与限制工具
+
+### 远程访问（HTTPS）与限制工具
 
 默认情况下 `vmware-privateai mcp` 通过 stdio 服务一个本地客户端，并提供全部工具。以下两个选项可以改变这一点
 （需 vmware-policy ≥ 1.21.0）。
@@ -179,10 +233,47 @@ vmware-privateai mcp --expose read --allow-write assign_vgpu
 
 详见 `skills/vmware-privateai/references/setup-guide.md`（"Serving MCP over HTTPS"、"Limiting which tools are offered"）。
 
-## License
-MIT
+<a id="readme-troubleshooting"></a>
 
-## 系统代理绕过
+## 故障排查
+
+### 系统代理绕过
 
 PAIS REST 客户端按操作系统的代理绕过列表直连配置的目标地址。
 TLS 校验仍由 `verify_ssl` 控制，`SSL_CERT_FILE` 等 CA 环境设置继续生效；其他地址保留原有代理路由。
+
+<a id="readme-companion-skills"></a>
+
+## 配套 Skills
+
+VMware Skills 家族包含 14 个 MCP Server 和共享 Policy 库。按职责选择工具： [vmware-skills](https://github.com/vmware-skills).
+
+### Companion Skills
+
+- [vmware-aiops](https://github.com/vmware-skills/VMware-AIops) —— AI 负载背后的 vCenter 虚机(开关机/快照/克隆/迁移)
+- [vmware-vks](https://github.com/vmware-skills/VMware-VKS) —— GPU 使能的 Tanzu Kubernetes
+- [vmware-monitor](https://github.com/vmware-skills/VMware-Monitor) —— 只读 vSphere 健康
+
+本 skill 是这三者之上的 GPU 视角。
+
+<a id="readme-reference"></a>
+
+## 参考资料
+
+变更记录： [RELEASE_NOTES.md](RELEASE_NOTES.md).
+
+使用自己的模型和 Agent 宿主进行只读自测： [model-fit self-test](https://github.com/vmware-skills/marketplace/blob/main/MODEL_FIT_SELF_TEST.md).
+
+### 升级到 2.0
+
+2.0 把当时的全部 MCP 工具改成动词在前（例如 `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`），完整的新旧名对照表见
+[RELEASE_NOTES.md](RELEASE_NOTES.md#v200--mcp-tools-renamed-verb-first)。其他都不变：工具、参数、安全确认门和 CLI 命令都一样。
+如果 agent 提示词、脚本或 `~/.vmware/rules.yaml` 里写了工具名，请改成新名——不过用旧名写的 deny 规则在
+vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改名而多匹配的规则），vmware-pilot ≥ 1.13 也会自动转换已保存工作流里的旧名。
+如果还有 2.0 之前的安装共用这个 `rules.yaml`，请把它的 vmware-policy 也升到 ≥ 1.18.2：它会按新旧两个名字匹配每条规则，一份文件两边都管用。
+
+<a id="readme-license"></a>
+
+## 许可证
+
+MIT
