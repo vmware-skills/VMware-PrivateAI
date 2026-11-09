@@ -20,6 +20,8 @@ PAIS REST API. MCP server + CLI.
 > (see the beta caveats in `skills/vmware-privateai/SKILL.md`). Governed by the family harness (audit + policy +
 > teaching errors); read/write authorization is left to the RBAC role of the vCenter service account.
 
+Supporting commands also check GPU readiness and access, estimate model sizing locally and inspect local air-gap bundles. Local sizing does not contact a model provider or consume inference quota. Diagnostic examples shared in issues must be minimized and redacted: remove identifiers, internal addresses, sensitive hardware/capacity details and credentials.
+
 ## Upgrading to 2.0
 
 2.0 renamed every MCP tool it had so every name starts with a verb (e.g. `directpath_profile_list` → `list_directpath_profiles`, `gpu_consumer_list` → `list_gpu_consumers`, `gpu_device_list` → `list_gpu_devices`). The full old → new table is in
@@ -66,7 +68,7 @@ These routes have not been tested against a live PAIS appliance.
 ## Quick Start
 
 ```bash
-uv tool install vmware-privateai
+uv tool install vmware-privateai==2.5.0
 vmware-privateai version
 vmware-privateai gpu host-list        # first read command — lists the hosts that have GPUs
 ```

@@ -68,7 +68,7 @@ shared audit/policy/sanitize harness). No urllib3, no requests.
 
 ## Static Analysis
 ```bash
-uvx bandit -r vmware_privateai/     # target: 0 Medium+ issues
+uvx bandit==1.9.4 -r vmware_privateai/     # target: 0 Medium+ issues
 ```
 
 ## Supported Versions

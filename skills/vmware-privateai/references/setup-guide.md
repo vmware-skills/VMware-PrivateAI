@@ -46,12 +46,18 @@ Passwords and the PAIS bearer token live only in `~/.vmware-privateai/.env`:
 
 ```bash
 mkdir -p ~/.vmware-privateai
-cat >> ~/.vmware-privateai/.env <<'EOF'
-VMWARE_PRIVATEAI_VC_PROD_PASSWORD=your-vcenter-password
-VMWARE_PRIVATEAI_PAIS_TOKEN=your-oidc-bearer-token
+(
+  umask 077
+  set -C  # Refuse existing files; edit an existing .env locally instead
+  cat > ~/.vmware-privateai/.env <<'EOF'
+VMWARE_PRIVATEAI_VC_PROD_PASSWORD=REPLACE_IN_LOCAL_EDITOR
+VMWARE_PRIVATEAI_PAIS_TOKEN=REPLACE_IN_LOCAL_EDITOR
 EOF
-chmod 600 ~/.vmware-privateai/.env
+)
+# Before continuing, edit .env locally; never type live secrets into shell commands.
 ```
+
+This writes placeholders only. Enter passwords or tokens using a local editor after creation; do not paste live credentials into terminal commands, chat or commits. If the file exists, the command refuses to overwrite it; edit the existing file after checking its permissions are `600`.
 
 - **Per-target password**: `VMWARE_PRIVATEAI_<TARGET>_PASSWORD`, where `<TARGET>` is the target `name`
   upper-cased with `-` replaced by `_` (so target `vc-prod` → `VMWARE_PRIVATEAI_VC_PROD_PASSWORD`).
@@ -202,5 +208,5 @@ endpoint/token) — follow the message.
 ### Static analysis
 
 ```bash
-uvx bandit -r vmware_privateai/            # target: 0 Medium+ issues
+uvx bandit==1.9.4 -r vmware_privateai/            # target: 0 Medium+ issues
 ```
