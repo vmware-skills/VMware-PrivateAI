@@ -76,11 +76,7 @@ vmware-privateai gpu host-list        # 第一条读命令 —— 列出有 GPU 
   "mcpServers": {
     "vmware-privateai": {
       "command": "uvx",
-      "args": [
-        "--from",
-        "vmware-privateai==2.5.0",
-        "vmware-privateai-mcp"
-      ],
+      "args": ["--from", "vmware-privateai==2.5.0", "vmware-privateai-mcp"],
       "env": {
         "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml"
       }

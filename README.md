@@ -80,11 +80,7 @@ Copy this configuration into your MCP client's local stdio settings. The client 
   "mcpServers": {
     "vmware-privateai": {
       "command": "uvx",
-      "args": [
-        "--from",
-        "vmware-privateai==2.5.0",
-        "vmware-privateai-mcp"
-      ],
+      "args": ["--from", "vmware-privateai==2.5.0", "vmware-privateai-mcp"],
       "env": {
         "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml"
       }
