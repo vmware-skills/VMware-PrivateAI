@@ -1,0 +1,16 @@
+{
+  "name": "vmware-privateai",
+  "version": "2.5.0",
+  "description": "VMware Private AI Foundation with NVIDIA ops — GPU inventory, vGPU/DirectPath profiles, utilization, model-serving (MCP + CLI)",
+  "mcpServers": {
+    "vmware-privateai": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "vmware-privateai==2.5.0",
+        "vmware-privateai-mcp"
+      ]
+    }
+  }
+}
