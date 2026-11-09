@@ -45,7 +45,7 @@ Full agent instructions: [`skills/vmware-privateai/SKILL.md`](skills/vmware-priv
 Requires Python `>=3.11` and `uv`.
 
 ```bash
-uv tool install vmware-privateai==2.5.0
+uv tool install vmware-privateai==2.5.1
 vmware-privateai --help
 ```
 
@@ -57,7 +57,7 @@ Target, credential and local data setup: [setup guide](skills/vmware-privateai/r
 ### Quick Start
 
 ```bash
-uv tool install vmware-privateai==2.5.0
+uv tool install vmware-privateai==2.5.1
 vmware-privateai version
 vmware-privateai gpu host-list        # first read command — lists the hosts that have GPUs
 ```
@@ -80,7 +80,7 @@ Copy this configuration into your MCP client's local stdio settings. The client 
   "mcpServers": {
     "vmware-privateai": {
       "command": "uvx",
-      "args": ["--from", "vmware-privateai==2.5.0", "vmware-privateai-mcp"],
+      "args": ["--from", "vmware-privateai==2.5.1", "vmware-privateai-mcp"],
       "env": {
         "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml"
       }
