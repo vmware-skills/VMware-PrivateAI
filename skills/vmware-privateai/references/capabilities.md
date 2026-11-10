@@ -150,3 +150,7 @@ gate (踩坑 #36):
   first live run; `/control/models` is a best-guess pending a live OpenAPI).
 - **NO_API** (code must not invent an endpoint): MIG mode set, GPU driver version, deep GPU telemetry
   (DCGM), one-call DL-VM deploy, pgvector.
+
+## Maintenance safety boundary
+
+PAIS gallery cursors are opaque: repeated, overlong or unsafe cursors produce partial coverage without a next cursor. Do not alter a cursor or infer a complete/empty registry from a partial result.

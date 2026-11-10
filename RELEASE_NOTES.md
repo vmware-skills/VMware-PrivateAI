@@ -11,6 +11,14 @@ Add the root Gemini CLI extension manifest and discovery metadata, using the exi
 
 Runtime infrastructure operations, permissions, TLS defaults and confirmation behavior are unchanged. No new vSphere/VCF 9.x or live product compatibility is claimed. ClawHub skill and bundle verdicts are checked separately after publication; documentation corrections are not a clean-scan claim.
 
+## v2.5.2 (2026-11-10) — Preserve opaque PAIS gallery cursors
+
+Stop continuation on repeated, unsafe or overlong cursors with partial coverage and no next cursor; never sanitize or truncate an opaque token into a different token. Keep valid tokens unchanged through query encoding. Add HTTP contract checks for progress, completeness and cursor preservation.
+
+Validation: existing suites, complete CLI/MCP surface comparison, structural guard checks and security scanning; exact results are retained in the private release record. Live 9.1/Supervisor, PAIS, NSX and Horizon validation is not established by synthetic tests.
+
+中文：本轮修复和重构范围见上述说明；保留既有 Policy、审计及确认门。合成测试不代表 9.1/Supervisor、PAIS、NSX 或 Horizon 正向真机验证。
+
 ## v2.5.0 — read-only PAIS MCP gallery and dependency security (2026-11-08)
 
 * Update public author/project contact metadata to `zhouwei008@gmail.com`.

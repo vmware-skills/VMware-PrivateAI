@@ -45,7 +45,7 @@ Full agent instructions: [`skills/vmware-privateai/SKILL.md`](skills/vmware-priv
 Requires Python `>=3.11` and `uv`.
 
 ```bash
-uv tool install vmware-privateai==2.5.1
+uv tool install vmware-privateai==2.5.2
 vmware-privateai --help
 ```
 
@@ -57,7 +57,7 @@ Target, credential and local data setup: [setup guide](skills/vmware-privateai/r
 ### Quick Start
 
 ```bash
-uv tool install vmware-privateai==2.5.1
+uv tool install vmware-privateai==2.5.2
 vmware-privateai version
 vmware-privateai gpu host-list        # first read command — lists the hosts that have GPUs
 ```
@@ -80,7 +80,7 @@ Copy this configuration into your MCP client's local stdio settings. The client 
   "mcpServers": {
     "vmware-privateai": {
       "command": "uvx",
-      "args": ["--from", "vmware-privateai==2.5.1", "vmware-privateai-mcp"],
+      "args": ["--from", "vmware-privateai==2.5.2", "vmware-privateai-mcp"],
       "env": {
         "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml"
       }
@@ -291,3 +291,11 @@ against both the old and the new name, so one file serves both.
 ## License
 
 MIT
+
+### PAIS gallery continuation
+
+Gallery continuation tokens are opaque. A missing, repeated, overlong or
+sanitization-changing token stops continuation with `status=partial` and
+`next_after=null`; it does not establish that the registry is empty or complete.
+Valid tokens are passed unchanged through query encoding. These boundaries are
+covered with synthetic HTTP responses; PAIS live validation is still pending.
