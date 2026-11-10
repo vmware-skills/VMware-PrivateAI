@@ -42,7 +42,7 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 需要 Python `>=3.11` 和 `uv`。
 
 ```bash
-uv tool install vmware-privateai==2.5.1
+uv tool install vmware-privateai==2.5.2
 vmware-privateai --help
 ```
 
@@ -54,7 +54,7 @@ vmware-privateai --help
 ### 快速开始
 
 ```bash
-uv tool install vmware-privateai==2.5.1
+uv tool install vmware-privateai==2.5.2
 vmware-privateai version
 vmware-privateai gpu host-list        # 第一条读命令 —— 列出有 GPU 的主机
 ```
@@ -76,7 +76,7 @@ vmware-privateai gpu host-list        # 第一条读命令 —— 列出有 GPU 
   "mcpServers": {
     "vmware-privateai": {
       "command": "uvx",
-      "args": ["--from", "vmware-privateai==2.5.1", "vmware-privateai-mcp"],
+      "args": ["--from", "vmware-privateai==2.5.2", "vmware-privateai-mcp"],
       "env": {
         "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml"
       }
@@ -273,3 +273,10 @@ vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改�
 ## 许可证
 
 MIT
+
+### PAIS 广场分页续查
+
+广场分页游标是不透明标识。游标缺失、重复、过长或需要修改才能消毒时，停止
+续查并返回 `status=partial`、`next_after=null`，不能据此判断注册表为空或已完整
+读取。有效游标通过查询编码原样传递。这些边界已有合成 HTTP 响应测试，PAIS
+正向真机验证仍待补。

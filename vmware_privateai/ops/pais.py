@@ -52,7 +52,7 @@ def _gallery_query(limit: int, after: str | None, **filters: object) -> str:
     return urlencode(params)
 
 
-def _gallery_page(payload: Any, limit: int, project) -> dict:
+def _gallery_page(payload: Any, limit: int, project, after: str | None = None) -> dict:
     """Keep PAIS cursor semantics; malformed bodies cannot mean an empty fleet."""
     if (not isinstance(payload, dict) or not isinstance(payload.get("data"), list)
             or not all(isinstance(row, dict) for row in payload["data"])
@@ -66,14 +66,18 @@ def _gallery_page(payload: Any, limit: int, project) -> dict:
     # An appliance that ignores limit may return a cursor beyond the displayed
     # rows. Do not offer a cursor that would silently skip those records.
     cursor = payload.get("last_id") if has_more and not over_limit else None
-    if not isinstance(cursor, str) or not cursor:
+    if (not isinstance(cursor, str) or not cursor or cursor == after
+            or len(cursor) > 128 or any(ord(c) < 32 or ord(c) == 127 for c in cursor)
+            or _sanitize(cursor, 128) != cursor):
+        # Opaque cursors cannot be trimmed or sanitized into different tokens.
+        # Re-offering the incoming cursor would make callers repeat one page.
         cursor = None
     # PAIS only populates num_objects when requested; avoid a false zero.
     return {"items": rows, "returned": len(rows), "limit": limit, "total": None,
-            "truncated": has_more, "next_after": _sanitize(cursor, 128) if cursor else None,
+            "truncated": has_more, "next_after": cursor,
             "status": "measured" if not has_more or cursor else "partial",
             "hint": ("PAIS reports more entries; pass next_after to continue."
-                     if cursor else "PAIS reports more entries but returned no cursor; listing is incomplete."
+                     if cursor else "PAIS reports more entries but returned no usable advancing cursor; listing is incomplete."
                      if has_more else None),
             "scope_note": (
                 "PAIS tool approval is not backend authorization; "
@@ -89,7 +93,7 @@ def list_pais_mcp_servers(client: PaisClient, *, limit: int = 50, after: str | N
         return {key: _sanitize(row.get(key), 160) for key in
                 ("id", "name", "transport", "availability")}
 
-    return _gallery_page(payload, limit, project)
+    return _gallery_page(payload, limit, project, after)
 
 
 def list_pais_mcp_tools(
@@ -120,7 +124,7 @@ def list_pais_mcp_tools(
                     else None
                 )}
 
-    return _gallery_page(payload, limit, project)
+    return _gallery_page(payload, limit, project, after)
 
 
 def _as_rows(payload: Any, *keys: str) -> list:
