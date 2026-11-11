@@ -152,11 +152,10 @@ def test_list_models_parses_bare_list_and_filters(monkeypatch):
     assert out["total"] == 1 and out["items"][0]["id"] == "mixtral-8x7b"
 
 
-def test_list_models_unexpected_shape_degrades_to_empty(monkeypatch):
-    # 踩坑 形态 #1: an unexpected body must read as checked-and-none, not crash.
+def test_list_models_unexpected_shape_is_unknown(monkeypatch):
     with _client(monkeypatch, lambda r: httpx.Response(200, json={"unexpected": True})) as client:
-        out = pais.list_models(client)
-    assert out["items"] == [] and out["truncated"] is False
+        with pytest.raises(PaisError, match="inventory is unknown"):
+            pais.list_models(client)
 
 
 def test_list_knowledge_bases_parses_and_projects(monkeypatch):
@@ -181,10 +180,10 @@ def test_model_catalog_hits_spec_path_and_projects(monkeypatch):
     assert out["items"][0]["id"] == "llama-70b" and out["items"][0]["status"] == "approved"
 
 
-def test_model_catalog_unexpected_shape_degrades_to_empty(monkeypatch):
+def test_model_catalog_unexpected_shape_is_unknown(monkeypatch):
     with _client(monkeypatch, lambda r: httpx.Response(200, json={"nope": 1})) as client:
-        out = pais.list_model_catalog(client)
-    assert out["items"] == [] and out["truncated"] is False
+        with pytest.raises(PaisError, match="inventory is unknown"):
+            pais.list_model_catalog(client)
 
 
 def test_data_sources_hits_spec_path_and_projects(monkeypatch):

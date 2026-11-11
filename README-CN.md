@@ -42,7 +42,7 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 需要 Python `>=3.11` 和 `uv`。
 
 ```bash
-uv tool install vmware-privateai==2.5.2
+uv tool install vmware-privateai==2.5.3
 vmware-privateai --help
 ```
 
@@ -54,7 +54,7 @@ vmware-privateai --help
 ### 快速开始
 
 ```bash
-uv tool install vmware-privateai==2.5.2
+uv tool install vmware-privateai==2.5.3
 vmware-privateai version
 vmware-privateai gpu host-list        # 第一条读命令 —— 列出有 GPU 的主机
 ```
@@ -76,7 +76,7 @@ vmware-privateai gpu host-list        # 第一条读命令 —— 列出有 GPU 
   "mcpServers": {
     "vmware-privateai": {
       "command": "uvx",
-      "args": ["--from", "vmware-privateai==2.5.2", "vmware-privateai-mcp"],
+      "args": ["--from", "vmware-privateai==2.5.3", "vmware-privateai-mcp"],
       "env": {
         "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml"
       }
@@ -269,6 +269,8 @@ vmware-policy ≥ 1.18 下仍然生效（`vmware-audit policy` 会列出因改�
 如果还有 2.0 之前的安装共用这个 `rules.yaml`，请把它的 vmware-policy 也升到 ≥ 1.18.2：它会按新旧两个名字匹配每条规则，一份文件两边都管用。
 
 <a id="readme-license"></a>
+
+PAIS 清单的容器形状无法识别或包含非对象行时会返回可读错误，不能据此认定清单为空。已识别的空数组仍表示确实为空；PAIS 正向真机验证仍待补。
 
 ## 许可证
 

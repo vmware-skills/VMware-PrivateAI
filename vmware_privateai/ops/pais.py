@@ -17,6 +17,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 from vmware_privateai.ops._paging import envelope
+from vmware_privateai.ops._errors import PaisError
 from vmware_privateai.ops._sanitize import _sanitize
 from vmware_privateai.pais.client import PaisClient
 
@@ -128,19 +129,20 @@ def list_pais_mcp_tools(
 
 
 def _as_rows(payload: Any, *keys: str) -> list:
-    """Coerce an unconfirmed PAIS response into a list of row dicts.
-
-    Accepts a bare JSON array, or a dict carrying the rows under any of ``keys``
-    (e.g. "data", "items"). Anything else degrades to [] (checked-and-none, never a crash).
-    """
-    if isinstance(payload, list):
-        return payload
+    """Read a recognized collection; unknown evidence is never checked-and-none."""
+    rows = payload if isinstance(payload, list) else None
     if isinstance(payload, dict):
         for key in keys:
-            value = payload.get(key)
-            if isinstance(value, list):
-                return value
-    return []
+            if key in payload:
+                rows = payload[key]
+                break
+    if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
+        raise PaisError(
+            "PAIS collection response shape was not recognized; inventory is unknown. "
+            "Check the configured endpoint and obtain a redacted API response; "
+            "do not interpret this as an empty inventory."
+        )
+    return rows
 
 
 def _matches(text: str, needle: str | None) -> bool:

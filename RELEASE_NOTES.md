@@ -1,3 +1,9 @@
+## v2.5.3 (2026-11-11) — Refuse unrecognized PAIS collection responses
+
+Malformed or unrecognized PAIS collection bodies and non-object rows raise an authored PaisError instead of being reported as a measured empty inventory. Recognized empty arrays remain valid. No PAIS appliance validation is claimed.
+
+Validation: focused before-fix reproductions and repository regression suites; synthetic API contracts do not establish a positive 9.1/PAIS/Horizon appliance result.
+
 ## v2.5.1 — Security documentation and Gemini extension packaging
 
 Released 2026-11-09.
