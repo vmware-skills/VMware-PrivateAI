@@ -45,7 +45,7 @@ Full agent instructions: [`skills/vmware-privateai/SKILL.md`](skills/vmware-priv
 Requires Python `>=3.11` and `uv`.
 
 ```bash
-uv tool install vmware-privateai==2.5.2
+uv tool install vmware-privateai==2.5.3
 vmware-privateai --help
 ```
 
@@ -57,7 +57,7 @@ Target, credential and local data setup: [setup guide](skills/vmware-privateai/r
 ### Quick Start
 
 ```bash
-uv tool install vmware-privateai==2.5.2
+uv tool install vmware-privateai==2.5.3
 vmware-privateai version
 vmware-privateai gpu host-list        # first read command — lists the hosts that have GPUs
 ```
@@ -80,7 +80,7 @@ Copy this configuration into your MCP client's local stdio settings. The client 
   "mcpServers": {
     "vmware-privateai": {
       "command": "uvx",
-      "args": ["--from", "vmware-privateai==2.5.2", "vmware-privateai-mcp"],
+      "args": ["--from", "vmware-privateai==2.5.3", "vmware-privateai-mcp"],
       "env": {
         "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml"
       }
@@ -287,6 +287,8 @@ If an install older than 2.0 shares that `rules.yaml`, give it vmware-policy ≥
 against both the old and the new name, so one file serves both.
 
 <a id="readme-license"></a>
+
+Unrecognized PAIS collection containers or non-object rows raise a readable error; they are never evidence of an empty inventory. Recognized empty arrays remain measured empty results. PAIS positive appliance validation is still pending.
 
 ## License
 
