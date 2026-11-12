@@ -2,6 +2,8 @@
 
 # VMware-PrivateAI
 
+<a id="readme-overview"></a>
+
 部署前，先检查 GPU 就绪情况与 VMware Private AI 资源。
 
 [English](README.md) · 简体中文
@@ -12,11 +14,15 @@
 
 使用合成数据的示意动画，非实时录屏。[观看家族 AI 配音介绍（约 2 分钟）](https://github.com/vmware-skills/marketplace/blob/main/assets/demos/vmware-skills-zh.mp4)
 
+<a id="readme-capabilities-and-workflows"></a>
+
 ## 能解决什么问题？
 
 - 检查 GPU/vGPU 清单、配置与利用率。
 - 查询受支持的 PAIS 目录与模型资源。
 - 进行本地规格估算与隔离包检查。
+
+<a id="readme-quick-start"></a>
 
 ## 快速开始
 
@@ -31,17 +37,26 @@ vmware-privateai --help
 
 Claude Code 及其他宿主安装方式见[家族门户](https://github.com/vmware-skills/marketplace/blob/main/README-CN.md)。
 
+<a id="readme-safety-and-audit"></a>
+
 ## 使用边界
 
 包含 GPU 分配及相关敏感 VM 操作。未知 API 响应保持未知；PAIS 真机验证限制及 Python 3.11+ 要求见文档。
+
+<a id="readme-mcp-configuration"></a> <a id="readme-troubleshooting"></a> <a id="readme-reference"></a>
 
 ## 详细文档
 
 - [能力范围](skills/vmware-privateai/references/capabilities.md)
 - [CLI 用法](skills/vmware-privateai/references/cli-reference.md)
 - [详细用法与架构](skills/vmware-privateai/references/detailed-guide-CN.md)
+- [MCP 启动配置](.mcp.json)
 - [唯一技能指令正本](skills/vmware-privateai/SKILL.md)
 
+<a id="readme-companion-skills"></a>
+
 属于 [VMware Skills 家族](https://github.com/vmware-skills/marketplace/blob/main/README-CN.md)：15 个 skill、14 个 MCP server 与一个共享 Policy 库。如果对你有用，欢迎 Star 家族门户。
+
+<a id="readme-license"></a>
 
 [问题与反馈](https://github.com/vmware-skills/VMware-PrivateAI/issues) · [MIT](LICENSE)
