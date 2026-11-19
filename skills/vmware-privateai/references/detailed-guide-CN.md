@@ -43,7 +43,7 @@ vGPU / DirectPath 配置目录、vGPU 分配,以及 **Private AI Service(PAIS)**
 需要 Python `>=3.11` 和 `uv`。
 
 ```bash
-uv tool install vmware-privateai==2.5.3
+uv tool install vmware-privateai==2.5.4
 vmware-privateai --help
 ```
 
@@ -55,7 +55,7 @@ vmware-privateai --help
 ### 快速开始
 
 ```bash
-uv tool install vmware-privateai==2.5.3
+uv tool install vmware-privateai==2.5.4
 vmware-privateai version
 vmware-privateai gpu host-list        # 第一条读命令 —— 列出有 GPU 的主机
 ```
@@ -77,7 +77,7 @@ vmware-privateai gpu host-list        # 第一条读命令 —— 列出有 GPU 
   "mcpServers": {
     "vmware-privateai": {
       "command": "uvx",
-      "args": ["--from", "vmware-privateai==2.5.3", "vmware-privateai-mcp"],
+      "args": ["--from", "vmware-privateai==2.5.4", "vmware-privateai-mcp"],
       "env": {
         "VMWARE_PRIVATEAI_CONFIG": "~/.vmware-privateai/config.yaml"
       }

@@ -1,3 +1,9 @@
+## v2.5.4 (2026-11-19) — Compatible MCP result contracts
+
+Keep existing truncated/hint values and add next_offset. Requires vmware-policy>=1.26.0. Tool names, arguments, defaults and confirmation checks are unchanged.
+
+中文：保留旧 truncated/hint，只新增 next_offset。 依赖 vmware-policy>=1.26.0。工具名、参数、默认值和确认机制不变。
+
 ## v2.5.3 (2026-11-11) — Refuse unrecognized PAIS collection responses
 
 Malformed or unrecognized PAIS collection bodies and non-object rows raise an authored PaisError instead of being reported as a measured empty inventory. Recognized empty arrays remain valid. No PAIS appliance validation is claimed.

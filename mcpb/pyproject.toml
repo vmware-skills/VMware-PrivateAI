@@ -1,6 +1,6 @@
 [project]
 name = "vmware-privateai-mcpb"
-version = "2.5.3"
+version = "2.5.4"
 description = "Claude Desktop extension shim that runs the published vmware-privateai MCP server"
 requires-python = ">=3.11"
-dependencies = ["vmware-privateai==2.5.3"]
+dependencies = ["vmware-privateai==2.5.4"]
